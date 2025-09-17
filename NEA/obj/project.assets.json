@@ -1416,24 +1416,31 @@
     ]
   },
   "packageFolders": {
-    "/home/Otto/.nuget/packages/": {}
+    "C:\\Users\\ottoc\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
+      "projectUniqueName": "C:\\Users\\ottoc\\RiderProjects\\NEA\\NEA\\NEA.csproj",
       "projectName": "NEA",
-      "projectPath": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
-      "packagesPath": "/home/Otto/.nuget/packages/",
-      "outputPath": "/home/Otto/RiderProjects/NEA/NEA/obj/",
+      "projectPath": "C:\\Users\\ottoc\\RiderProjects\\NEA\\NEA\\NEA.csproj",
+      "packagesPath": "C:\\Users\\ottoc\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ottoc\\RiderProjects\\NEA\\NEA\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/Otto/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\ottoc\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -1452,7 +1459,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -1490,18 +1497,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.8, 9.0.8]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.109/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Users\\ottoc\\.dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
