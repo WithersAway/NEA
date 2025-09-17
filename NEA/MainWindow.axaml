@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="NEA.MainWindow"
+        Title="NEA"
+        Width="800" Height="600">
+    <Canvas Name="MyCanvas" Background="White">
+        <Rectangle Name="PlayerRectOld" Fill="#000000" Height="142" Canvas.Left="826" Stroke="Black" Canvas.Top="395" Width="81" RenderTransformOrigin="0.5,0.5">
+            <Rectangle.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="0"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Rectangle.RenderTransform>
+        </Rectangle>
+        <Label Name="distance"  Content="Label" Canvas.Left="724" Canvas.Top="32"/>
+    </Canvas>
+</Window>

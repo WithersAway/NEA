@@ -1,0 +1,95 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj": {}
+  },
+  "projects": {
+    "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
+        "projectName": "NEA",
+        "projectPath": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
+        "packagesPath": "/home/Otto/.nuget/packages/",
+        "outputPath": "/home/Otto/RiderProjects/NEA/NEA/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/Otto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Avalonia": {
+              "target": "Package",
+              "version": "[11.3.5, )"
+            },
+            "Avalonia.Desktop": {
+              "target": "Package",
+              "version": "[11.3.5, )"
+            },
+            "Avalonia.Diagnostics": {
+              "target": "Package",
+              "version": "[11.3.5, )"
+            },
+            "Avalonia.Fonts.Inter": {
+              "target": "Package",
+              "version": "[11.3.5, )"
+            },
+            "Avalonia.Themes.Fluent": {
+              "target": "Package",
+              "version": "[11.3.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.8, 9.0.8]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.109/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
