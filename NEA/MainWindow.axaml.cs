@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia;
+using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development at home
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
@@ -23,6 +23,28 @@ namespace NEA
         private Point mousePosition;
         private readonly DispatcherTimer gameTimer;
 
+        List<int> enemystats =
+            [
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                2,
+            ];
+ List<int> bossstats =
+            [
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                20,
+            ];
         public MainWindow()
         {
             InitializeComponent();
@@ -38,29 +60,19 @@ namespace NEA
                 "10",
                 "10",
                 "10",
-                "15",
+                "3",
                 "0"
             ]; // 10 in all stats, 15hp, warrior, name = tempname
             
-            List<int> enemystats =
-            [
-                10,
-                10,
-                10,
-                10,
-                10,
-                10,
-                10,
-                15,
-            ];
+            
             // Setting up player sprite
             Rectangle PlayerRect = new()
-            { 
-                Name = "PlayerRect", 
-                Fill = Brushes.HotPink, 
-                Height = 50, 
-                Stroke = Brushes.Black, 
-                Width = 30 
+            {
+                Name = "PlayerRect",
+                Fill = Brushes.Azure,
+                Height = 50,
+                Stroke = Brushes.Black,
+                Width = 30
             };
             
             GameObject = new Game(testingList, PlayerRect, 1);
@@ -99,7 +111,7 @@ namespace NEA
         }
         
         private DateTime lastDamageTime = DateTime.MinValue;
-        private const double iFrameLength = 0.25d; // Seconds of invincibility after taking damage
+        private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
 
         private void MainWindow_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
@@ -133,7 +145,7 @@ namespace NEA
             {
                 gameOver = true;
                 
-                // Stop the game timer
+                // Stop the game timer to stop other subroutines
                 gameTimer.Stop();
                 
                 // Display Game Over message and stop game
@@ -160,10 +172,7 @@ namespace NEA
         
         private int currentStage = 1;
         private bool stageTransitioning = false;
-        private readonly List<int> enemyStats = new List<int>
-        {
-            10, 10, 10, 10, 10, 10, 10, 15
-        };
+        
         
         private void Update(Player player, List<Enemy> enemies)
         {
@@ -194,10 +203,31 @@ namespace NEA
                 {
                     if (CheckCollisionOfTwoRects(projectile, enemy.enemy))
                     {
-                        enemiesToRemove.Add(enemy);
-                        projectilesToRemove.Add(projectile);
-                        MyCanvas.Children.Remove(enemy.enemy);
-                        MyCanvas.Children.Remove(projectile);
+                        if (enemy is Boss boss)
+                        {
+                            // Boss needs 5 * currentStage hits to die
+                            bool defeated = boss.ApplyHit();
+                            projectilesToRemove.Add(projectile);
+
+                            if (defeated)
+                            {
+                                enemiesToRemove.Add(enemy);
+                                MyCanvas.Children.Remove(enemy.enemy);
+                            }
+
+                            MyCanvas.Children.Remove(projectile);
+                        }
+                        else
+                        {
+                            enemiesToRemove.Add(enemy);
+                            projectilesToRemove.Add(projectile);
+
+                            
+
+                            MyCanvas.Children.Remove(enemy.enemy);
+                            
+                            MyCanvas.Children.Remove(projectile);
+                        }
                     }
                 }
             }
@@ -222,7 +252,8 @@ namespace NEA
             if (keysPressed.Contains(Key.S)) { y += moveConstant; }
             if (keysPressed.Contains(Key.A)) { x -= moveConstant; }
             if (keysPressed.Contains(Key.D)) { x += moveConstant; }
-
+            x = Math.Clamp(x, 0, 800-player.PlayerRectangle.Width);
+            y = Math.Clamp(y, 0, 600-player.PlayerRectangle.Height);
             Canvas.SetTop(player.PlayerRectangle, y);
             Canvas.SetLeft(player.PlayerRectangle, x);
 
@@ -258,9 +289,11 @@ namespace NEA
             await Task.Delay(2000);
             
             MyCanvas.Children.Remove(stageMessage);
-
+            if(currentStage % 5 != 0){
             // Spawn new enemies
             SpawnEnemies();
+            }
+            else { SpawnBoss(); }
 
             stageTransitioning = false;
         }
@@ -285,7 +318,7 @@ namespace NEA
                     Fill = Brushes.Black, 
                     Height = 35, 
                     Width = 25 
-                }, enemyStats);
+                }, enemystats);
                 
                 enemies.Add(newEnemy);
                 MyCanvas.Children.Add(newEnemy.enemy);
@@ -299,6 +332,31 @@ namespace NEA
                 Canvas.SetLeft(newEnemy.enemy, centerX + Math.Cos(angle) * radius);
                 Canvas.SetTop(newEnemy.enemy, centerY + Math.Sin(angle) * radius);
             }
+        }
+
+        private void SpawnBoss(){
+            // Clear any remaining projectiles
+            foreach (var projectile in playerProjectiles.ToList())
+            {
+                MyCanvas.Children.Remove(projectile);
+            }
+            playerProjectiles.Clear();
+
+            Boss newBoss = new(new Rectangle{
+                Fill = Brushes.Green, 
+                    Height = 45, 
+                    Width = 45 
+            }, bossstats, 1);
+            // Initialize boss hits based on current stage
+            newBoss.InitializeForStage(currentStage);
+            enemies.Add(newBoss);
+
+            // Add boss to canvas and position it
+            MyCanvas.Children.Add(newBoss.enemy);
+            double centerX = MyCanvas.Bounds.Width / 2 - newBoss.enemy.Width / 2;
+            double centerY = MyCanvas.Bounds.Height / 2 - newBoss.enemy.Height / 2;
+            Canvas.SetLeft(newBoss.enemy, centerX);
+            Canvas.SetTop(newBoss.enemy, centerY);
         }
             
         private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
@@ -342,6 +400,12 @@ namespace NEA
             double yDist = playerY - currentEnemyY;
             double directDistance = Math.Sqrt(xDist * xDist + yDist * yDist);
 
+            // Prevent division by zero / NaN when overlapping
+            if (directDistance <= double.Epsilon)
+            {
+                return; // Skip movement this tick (already colliding or exactly overlapping)
+            }
+
             // Calculate movement
             double xToMove = enemyMove * (xDist / directDistance);
             double yToMove = enemyMove * (yDist / directDistance);
@@ -366,6 +430,7 @@ namespace NEA
 
             MyCanvas.Children.Remove(enemy.enemy);
             MyCanvas.Children.Add(enemy.enemy);
+
         }
 
         private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2)
@@ -377,7 +442,7 @@ namespace NEA
             double y2 = Canvas.GetTop(rect2);
 
             // Add small buffer (1 pixel) to make collisions cleaner
-            const double buffer = 1.0;
+            const double buffer = 3.0;
 
             // Check for intersection with buffer
             return !(x1 + rect1.Width + buffer < x2 || x2 + rect2.Width + buffer < x1 || y1 + rect1.Height + buffer < y2 || y2 + rect2.Height + buffer < y1);
@@ -385,7 +450,7 @@ namespace NEA
         
         private void ShootProjectile(Rectangle Sender)
         {
-            Rectangle projectile = new Rectangle { Fill = Brushes.Black, Height = 10, Width = 10 };
+            Rectangle projectile = new() { Fill = Brushes.Black, Height = 10, Width = 10 };
             MyCanvas.Children.Add(projectile);
     
             double startX = Canvas.GetLeft(Sender) + Sender.Width / 2;
@@ -397,6 +462,11 @@ namespace NEA
     
             // Normalize the direction vector with Pythagoras
             double length = Math.Sqrt(dirX * dirX + dirY * dirY);
+            if (length <= double.Epsilon)
+            {
+                // If mouse is exactly at the player's center, skip firing this tick
+                return;
+            }
             dirX /= length;
             dirY /= length;
     
