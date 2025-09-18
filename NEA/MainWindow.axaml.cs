@@ -69,7 +69,7 @@ namespace NEA
             Rectangle PlayerRect = new()
             {
                 Name = "PlayerRect",
-                Fill = Brushes.Azure,
+                Fill = Brushes.HotPink,
                 Height = 50,
                 Stroke = Brushes.Black,
                 Width = 30
