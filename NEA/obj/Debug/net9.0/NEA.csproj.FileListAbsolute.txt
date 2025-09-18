@@ -71,3 +71,4 @@
 /home/Otto/RiderProjects/NEA/NEA/obj/Debug/net9.0/NEA.pdb
 /home/Otto/RiderProjects/NEA/NEA/obj/Debug/net9.0/NEA.genruntimeconfig.cache
 /home/Otto/RiderProjects/NEA/NEA/obj/Debug/net9.0/ref/NEA.dll
+/home/Otto/RiderProjects/NEA/NEA/obj/Debug/net9.0/NEA.sourcelink.json

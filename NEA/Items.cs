@@ -16,7 +16,7 @@ public class Item
         Consumable = consumable;
     }
 
-    readonly List<double> RarityModifier = new List<double> { 1, 1.1, 1.25, 1.5, 2 };
+    readonly List<double> RarityModifier = [1, 1.1, 1.25, 1.5, 2];
     protected string Name { get; set; }
     int Value { get; set; }
     Rarity Rarity { get; }
@@ -44,6 +44,8 @@ public class Weapon : Item
     Game.DamageTypes damageType;
     public Weapon(string name, int value, int rarity, bool relic, bool consumable, int damagetype, bool magic) : base(name, value, rarity, relic, consumable, magic)
     {
+        relic = false;
+        consumable = false;
         damageType = (Game.DamageTypes)damagetype;
     }
 }
