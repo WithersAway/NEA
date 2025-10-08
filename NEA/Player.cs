@@ -8,7 +8,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
 {
     public Rectangle PlayerRectangle { get; set; } = rectIN;
     public string Name { get; set; } = InitArgs[0];
-    internal Item[] Items { get; set; }
+    internal Item[]? Items { get; set; }
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
     internal Specialise Specialise { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected int invMax;

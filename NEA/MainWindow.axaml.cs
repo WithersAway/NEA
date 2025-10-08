@@ -16,9 +16,9 @@ namespace NEA
         const double moveConstant = 5d;
         const double enemyMove = 1d;
         public Game GameObject;
-        public List<Enemy> enemies = new();
-        List<Rectangle> playerProjectiles = new();
-        public HashSet<Key> keysPressed = new();
+        public List<Enemy> enemies = [];
+        List<Rectangle> playerProjectiles = [];
+        public HashSet<Key> keysPressed = [];
         bool gameOver = false;
         private Point mousePosition;
         private readonly DispatcherTimer gameTimer;
@@ -104,7 +104,7 @@ namespace NEA
             // Set up game loop timer
             gameTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16.66) // ~60 FPS
+                Interval = TimeSpan.FromMilliseconds(16.66) // ~60 FPS, actually just under since 1/60 is 0.01666...
             };
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
@@ -376,7 +376,15 @@ namespace NEA
             
             return new Rect(x, y, width, height);
         }
+        private void CheckObstacleCollision(Rectangle mover, Rectangle Obstacle)
+        {
+        // check if a collision is present
+            if (CheckCollisionOfTwoRects(mover, Obstacle))
+            {
+                
         
+            }
+        }
         private void EnemyMovement(Rectangle player, Enemy enemy)
         {
             // check if a collision is present

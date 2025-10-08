@@ -10,7 +10,7 @@ public class Item
     public Item(string name, int value, int rarity, bool relic, bool consumable, bool magic)
     {
         Name = name;
-        Value = (int)Math.Round(CalculateCost(value));
+        SetValue((int)Math.Round(CalculateCost(value)));
         Rarity = (Rarity)rarity;
         Relic = relic;
         Consumable = consumable;
@@ -18,7 +18,18 @@ public class Item
 
     readonly List<double> RarityModifier = [1, 1.1, 1.25, 1.5, 2];
     protected string Name { get; set; }
-    int Value { get; set; }
+    private int value;
+
+    private int GetValue()
+    {
+        return value;
+    }
+
+    private void SetValue(int value)
+    {
+        this.value = value;
+    }
+
     Rarity Rarity { get; }
     bool Relic { get; }
     bool Consumable { get; }

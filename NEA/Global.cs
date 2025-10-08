@@ -13,7 +13,7 @@ public class Game
     public int floor;
     public Player player;
     public Difficulty mode { get; set; }
-    List<Enemy> enemies = new List<Enemy>();
+    List<Enemy> enemies = [];
     public Game(List<string> args, Rectangle rect, int difficulty)
     {
         floor = 1;
