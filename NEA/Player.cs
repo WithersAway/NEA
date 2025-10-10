@@ -10,17 +10,27 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public string Name { get; set; } = InitArgs[0];
     internal Item[]? Items { get; set; }
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
-    internal Specialise Specialise { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
+    internal Specialise specialise { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected int invMax;
+    private int Ammo = 10;
 
     //add playerdead check
     public bool IsPlayerDead()
+    {
         {
             bool PlayerAlive = !this.PlayerStats.AnyStatsZero();
             return PlayerAlive;
         }
     }
-    enum Specialise
+    public void SetAmmo(int NewAmmo)
+    {
+        Ammo = NewAmmo;
+    }
+    public int GetAmmo(){
+        return Ammo;
+    }
+
+    internal enum Specialise
     {
         Warrior = 0,
         Archer = 1,
@@ -34,3 +44,4 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         Mage = 5,
         Thief = 8
     }
+}

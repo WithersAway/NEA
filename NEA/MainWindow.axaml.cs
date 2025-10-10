@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development at home
 using Avalonia.Controls;
@@ -13,15 +14,20 @@ namespace NEA
 {
     public partial class MainWindow : Window
     {
+        public DateTime lastPlayerCollisionTime = DateTime.Now;
         const double moveConstant = 5d;
+        const double stuckMove = 10d;
         const double enemyMove = 1d;
         public Game GameObject;
         public List<Enemy> enemies = [];
         List<Rectangle> playerProjectiles = [];
+        List<Obstacle> obstacles = [];
         public HashSet<Key> keysPressed = [];
         bool gameOver = false;
         private Point mousePosition;
+        private Label playerAmmo;
         private readonly DispatcherTimer gameTimer;
+        private bool pauseMenuOpen = false;
 
         List<int> enemystats =
             [
@@ -48,7 +54,6 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
-            
             List<string> testingList =
             [
                 // temporary testing values for player stats & name & class
@@ -81,7 +86,17 @@ namespace NEA
             {
                 enemies.Add(new Enemy(new Rectangle { Fill = Brushes.Black, Height = 35, Width = 25 }, enemystats));
             }
-            
+            playerAmmo = new()
+            {
+                Name = "AmmoCounter",
+                Height = 30,
+                Width = 50,
+                FontSize = 25,
+                Content = $"Ammo: {GameObject.player.GetAmmo()}",
+                Background = Brushes.Aqua
+
+            };
+            MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
             foreach (Enemy Enemy in enemies)
             {
@@ -115,7 +130,7 @@ namespace NEA
 
         private void MainWindow_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            ShootProjectile(GameObject.player.PlayerRectangle);
+            ShootProjectile(GameObject.player);
         }
 
         private void MainWindow_KeyUp(object? sender, KeyEventArgs e)
@@ -179,7 +194,9 @@ namespace NEA
             if (gameOver || stageTransitioning) {
              return;
             }
-
+            playerAmmo.Content = player.GetAmmo();
+            MyCanvas.Children.Remove(playerAmmo);
+            MyCanvas.Children.Add(playerAmmo);
             // Create a list to store enemies that need to be removed
             List<Enemy> enemiesToRemove = new List<Enemy>();
             List<Rectangle> projectilesToRemove = new List<Rectangle>();
@@ -248,10 +265,35 @@ namespace NEA
                 StartNextStage();
             }
             
-            if (keysPressed.Contains(Key.W)) { y -= moveConstant; }
-            if (keysPressed.Contains(Key.S)) { y += moveConstant; }
-            if (keysPressed.Contains(Key.A)) { x -= moveConstant; }
-            if (keysPressed.Contains(Key.D)) { x += moveConstant; }
+            bool PlayerCollision = false;
+            foreach (Obstacle obstacle in obstacles)
+            {
+                if (CheckObstacleCollision(player.PlayerRectangle, obstacle.obstacle))
+                {
+                    PlayerCollision = true;
+                }
+            }
+            if (keysPressed.Contains(Key.Escape) && !pauseMenuOpen)
+            {
+                PauseMenu();
+            }
+            if (!PlayerCollision)
+            {
+                if (keysPressed.Contains(Key.W)) { y -= moveConstant; }
+                if (keysPressed.Contains(Key.S)) { y += moveConstant; }
+                if (keysPressed.Contains(Key.A)) { x -= moveConstant; }
+                if (keysPressed.Contains(Key.D)) { x += moveConstant; }    
+            }
+            else if (PlayerCollision)
+            {
+                
+                if (keysPressed.Contains(Key.W)) { y += stuckMove; }
+                if (keysPressed.Contains(Key.S)) { y -= stuckMove; }
+                if (keysPressed.Contains(Key.A)) { x += stuckMove; }
+                if (keysPressed.Contains(Key.D)) { x -= stuckMove; }  
+            }
+            
+            
             x = Math.Clamp(x, 0, 800-player.PlayerRectangle.Width);
             y = Math.Clamp(y, 0, 600-player.PlayerRectangle.Height);
             Canvas.SetTop(player.PlayerRectangle, y);
@@ -263,8 +305,74 @@ namespace NEA
             }
         }
         
+        private async void PauseMenu(){
+            pauseMenuOpen = true;
+            keysPressed.Remove(Key.Escape);
+            gameTimer.Stop();
+            var saveButton = new Button
+            {
+                Content = "Save",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            saveButton.Click += OnSaveClicked;
+            var messageBox = new Window()
+                {
+                    Title = "Pause Menu",
+                    Width = 450,
+                    Height = 300,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock { Text = "Paused.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                            new TextBlock { Text = "Close window to continue...", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20)},
+                            saveButton
+                        }
+                    }
+                };
+                
+                await messageBox.ShowDialog(this);
+            gameTimer.Start();
+            pauseMenuOpen = false;
+            
+        }
+        private void OnSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            SaveGame();
+        }
+        private async void SaveGame(){
+            var CommitSave = new Button
+            {
+                Content = "Save File",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            CommitSave.Click += CommitSaveClicked;
+            var saveMessageBox = new Window()
+                {
+                    Title = "Save Game Menu",
+                    Width = 450,
+                    Height = 300,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock { Text = "Give path to location to save to.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                            new TextBlock { Text = "temp", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20)},
+                            CommitSave
+                        }
+                    }
+                };
+                await saveMessageBox.ShowDialog(this);
+        }
+        private void CommitSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            throw new Exception("Unimplemented as of yet!");
+        }
         private async void StartNextStage()
         {
+            GameObject.player.SetAmmo(10);
             stageTransitioning = true;
             currentStage++;
 
@@ -294,8 +402,30 @@ namespace NEA
             SpawnEnemies();
             }
             else { SpawnBoss(); }
-
+            SpawnObstacles();
             stageTransitioning = false;
+        }
+
+        private void SpawnObstacles(){
+            foreach (Obstacle obstacle in obstacles)
+            {
+                MyCanvas.Children.Remove(obstacle.obstacle);
+            }
+            obstacles.Clear();
+            for (int i = 0; i < 5; i++)
+            {
+                Obstacle newObstacle = new(new Rectangle
+                {
+                    Fill = Brushes.Cyan,
+                    Height = 30,
+                    Width = 30
+                });
+                obstacles.Add(newObstacle);
+                MyCanvas.Children.Add(newObstacle.obstacle);
+                Random r = new Random();
+                Canvas.SetLeft(newObstacle.obstacle, r.Next(800));
+                Canvas.SetTop(newObstacle.obstacle, r.Next(600));
+            }
         }
 
         private void SpawnEnemies()
@@ -376,14 +506,9 @@ namespace NEA
             
             return new Rect(x, y, width, height);
         }
-        private void CheckObstacleCollision(Rectangle mover, Rectangle Obstacle)
+        private static bool CheckObstacleCollision(Rectangle mover, Rectangle Obstacle)
         {
-        // check if a collision is present
-            if (CheckCollisionOfTwoRects(mover, Obstacle))
-            {
-                
-        
-            }
+            return CheckCollisionOfTwoRects(mover, Obstacle);
         }
         private void EnemyMovement(Rectangle player, Enemy enemy)
         {
@@ -420,6 +545,14 @@ namespace NEA
 
             double nextX = currentEnemyX + xToMove;
             double nextY = currentEnemyY + yToMove;
+            foreach (Obstacle obstacle in obstacles)
+            {
+                if (CheckObstacleCollision(enemy.enemy, obstacle.obstacle))
+                {
+                    nextX = currentEnemyX - 2 * xToMove;
+                    nextY = currentEnemyY - 2 * yToMove;
+                }
+            }
             
             Canvas.SetLeft(enemy.enemy, nextX);
             if (CheckCollisionOfTwoRects(player, enemy.enemy))
@@ -456,19 +589,23 @@ namespace NEA
             return !(x1 + rect1.Width + buffer < x2 || x2 + rect2.Width + buffer < x1 || y1 + rect1.Height + buffer < y2 || y2 + rect2.Height + buffer < y1);
         }
         
-        private void ShootProjectile(Rectangle Sender)
+        private void ShootProjectile(Player Sender)
         {
+            if (!(Sender.GetAmmo() > 0))
+            {
+                return;
+            }
             Rectangle projectile = new() { Fill = Brushes.Black, Height = 10, Width = 10 };
             MyCanvas.Children.Add(projectile);
     
-            double startX = Canvas.GetLeft(Sender) + Sender.Width / 2;
-            double startY = Canvas.GetTop(Sender) + Sender.Height / 2;
+            double startX = Canvas.GetLeft(Sender.PlayerRectangle) + Sender.PlayerRectangle.Width / 2;
+            double startY = Canvas.GetTop(Sender.PlayerRectangle) + Sender.PlayerRectangle.Height / 2;
     
             // Calculate direction vector for projectile
             double dirX = mousePosition.X - startX;
             double dirY = mousePosition.Y - startY;
     
-            // Normalize the direction vector with Pythagoras
+            // Normalise the direction vector with Pythagoras
             double length = Math.Sqrt(dirX * dirX + dirY * dirY);
             if (length <= double.Epsilon)
             {
@@ -484,11 +621,12 @@ namespace NEA
             Canvas.SetTop(projectile, startY);
             Canvas.SetLeft(projectile, startX);
             playerProjectiles.Add(projectile);
+            Sender.SetAmmo(Sender.GetAmmo() - 1);
         }
         
         private static void MoveProjectiles(Rectangle projectile)
         {
-            #pragma warning disable CS8605
+            #pragma warning disable CS8605 //Disables warning (it got annoying)
             Vector direction = (Vector)projectile.Tag;
             #pragma warning restore CS8605
 

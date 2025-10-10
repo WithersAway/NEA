@@ -6,7 +6,7 @@ namespace NEA
 {
     public class Obstacle
     {
-        internal Rectangle obstacle { get; set; }
+        public Rectangle obstacle { get; set; }
         public Obstacle(Rectangle rectangleParameter)
         {
             obstacle = rectangleParameter;
