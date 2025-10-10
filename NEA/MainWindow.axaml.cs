@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,6 +16,8 @@ namespace NEA
 {
     public partial class MainWindow : Window
     {
+        private bool saveClicked = false;
+        private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
         const double moveConstant = 5d;
         const double stuckMove = 10d;
@@ -342,6 +346,14 @@ namespace NEA
             SaveGame();
         }
         private async void SaveGame(){
+            InputPath = new TextBox
+            {
+                Width = 200,
+                Watermark = "Type path here...",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(10)
+            };
+
             var CommitSave = new Button
             {
                 Content = "Save File",
@@ -360,15 +372,71 @@ namespace NEA
                         Children =
                         {
                             new TextBlock { Text = "Give path to location to save to.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
-                            new TextBlock { Text = "temp", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20)},
+                            InputPath,
                             CommitSave
                         }
                     }
                 };
                 await saveMessageBox.ShowDialog(this);
+                
         }
-        private void CommitSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
-            throw new Exception("Unimplemented as of yet!");
+        private async void CommitSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            string path = "";
+            try
+            {
+                if (!(InputPath.Text == string.Empty))
+                {
+                    path = InputPath.Text;
+                }
+                
+            }
+            catch (System.ArgumentNullException)
+            {
+
+                var ErrorBox = new Window()
+                {
+                    Title = "Error!",
+                    Width = 150,
+                    Height = 100,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock { Text = "Please enter a valid path.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                            
+                        }
+                    }
+
+                };
+                await ErrorBox.ShowDialog(this);
+                return;
+            }
+            if (path == string.Empty)
+            {
+                return;
+            }
+            else
+            {
+                try
+            {
+                using (StreamWriter sw = new StreamWriter(path))
+            {
+                sw.WriteLine("Testing saving...");
+            };
+            saveClicked = true;
+            return;
+            }
+            catch (System.ArgumentNullException)
+            {
+                
+                return;
+            }
+            }
+            
+            
+
+
         }
         private async void StartNextStage()
         {
