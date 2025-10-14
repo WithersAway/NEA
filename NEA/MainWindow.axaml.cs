@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development at home
@@ -10,6 +11,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Threading;
 
 namespace NEA
@@ -17,6 +19,8 @@ namespace NEA
     public partial class MainWindow : Window
     {
         private bool saveClicked = false;
+        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3"];
+        private Dictionary<string, Buff> UpgradeEffects = new();
         private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
         const double moveConstant = 5d;
@@ -58,6 +62,9 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
+            UpgradeEffects.Add(upgrades[0], new DamageBuff(1));
+            UpgradeEffects.Add(upgrades[1], new DamageBuff(2));
+            UpgradeEffects.Add(upgrades[2], new DamageBuff(3));
             List<string> testingList =
             [
                 // temporary testing values for player stats & name & class
@@ -248,6 +255,7 @@ namespace NEA
                             MyCanvas.Children.Remove(enemy.enemy);
                             
                             MyCanvas.Children.Remove(projectile);
+                            player.SetAmmo(player.GetAmmo()+3);
                         }
                     }
                 }
@@ -319,7 +327,14 @@ namespace NEA
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                 Margin = new Thickness(20)
             };
+            var loadButton = new Button
+            {
+                Content = "Load",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+            };
             saveButton.Click += OnSaveClicked;
+            loadButton.Click += OnLoadClicked;
             var messageBox = new Window()
                 {
                     Title = "Pause Menu",
@@ -332,7 +347,8 @@ namespace NEA
                         {
                             new TextBlock { Text = "Paused.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
                             new TextBlock { Text = "Close window to continue...", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20)},
-                            saveButton
+                            saveButton,
+                            loadButton
                         }
                     }
                 };
@@ -344,6 +360,9 @@ namespace NEA
         }
         private void OnSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
             SaveGame();
+        }
+        private void OnLoadClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            LoadGame();
         }
         private async void SaveGame(){
             InputPath = new TextBox
@@ -384,7 +403,7 @@ namespace NEA
             string path = "";
             try
             {
-                if (!(InputPath.Text == string.Empty))
+                if (!string.IsNullOrEmpty(InputPath.Text))
                 {
                     path = InputPath.Text;
                 }
@@ -422,7 +441,7 @@ namespace NEA
             {
                 using (StreamWriter sw = new StreamWriter(path))
             {
-                sw.WriteLine("Testing saving...");
+                sw.WriteLine(GameObject.floor);
             };
             saveClicked = true;
             return;
@@ -438,11 +457,148 @@ namespace NEA
 
 
         }
+        private async void LoadGame(){
+            InputPath = new TextBox
+            {
+                Width = 200,
+                Watermark = "Type path here...",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(10)
+            };
+
+            var CommitLoad = new Button
+            {
+                Content = "Load File",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            CommitLoad.Click += CommitLoadClicked;
+            var saveMessageBox = new Window()
+                {
+                    Title = "Load Game Menu",
+                    Width = 450,
+                    Height = 300,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock { Text = "Give path to location to save to.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                            InputPath,
+                            CommitLoad
+                        }
+                    }
+                };
+                await saveMessageBox.ShowDialog(this);
+        }
+        private async void CommitLoadClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+string path = "";
+            try
+            {
+                if (!string.IsNullOrEmpty(InputPath.Text))
+                {
+                    path = InputPath.Text;
+                }
+                
+            }
+            catch (System.ArgumentNullException)
+            {
+
+                var ErrorBox = new Window()
+                {
+                    Title = "Error!",
+                    Width = 150,
+                    Height = 100,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock { Text = "Please enter a valid path.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                            
+                        }
+                    }
+
+                };
+                await ErrorBox.ShowDialog(this);
+                return;
+            }
+            if (path == string.Empty)
+            {
+                return;
+            }
+            else
+            {
+                try
+            {
+                using (StreamReader sw = new StreamReader(path))
+            {
+                GameObject.floor = int.Parse(sw.ReadLine());
+                        StartNextStage();
+                    };
+            return;
+            }
+            catch (System.ArgumentNullException)
+            {
+                
+                return;
+            }
+            }
+            
+            
+
+
+        }
+        private void OnUpgradePicked(string key){
+            UpgradeEffects[key].ApplyBuff(UpgradeEffects[key]);
+        }
+        private async void PickUpgrade(){
+            Random r = new Random();
+            gameTimer.Stop();
+            List<string> UpgradesAvailable = [];
+            List<Button> UpgradePickButtons = [];
+            for (int i = 0; i < 3; i++)
+            {
+                UpgradesAvailable.Add(upgrades[r.Next(upgrades.Count)]);
+                var button = new Button{
+                    Content = UpgradesAvailable[i],
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    Margin = new Thickness(20)
+                };
+                button.Click += (sender, e) => OnUpgradePicked(UpgradesAvailable[i]);
+                UpgradePickButtons.Add(button);
+            }
+            
+            var stackPanel = new StackPanel
+            {
+                Children =
+                {
+                    new TextBlock { Text = "Pick an upgrade.", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(20) },
+                }
+            };
+            foreach (Button button in UpgradePickButtons)
+            {
+                stackPanel.Children.Add(button);
+            }
+            var saveMessageBox = new Window()
+            {
+                Title = "Save Game Menu",
+                Width = 450,
+                Height = 300,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = stackPanel
+
+            };
+            await saveMessageBox.ShowDialog(this);
+            gameTimer.Start();
+        }
         private async void StartNextStage()
         {
+            PickUpgrade();
+            GameObject.floor += 1;
             GameObject.player.SetAmmo(10);
             stageTransitioning = true;
-            currentStage++;
+            currentStage = GameObject.floor;
 
             // Show stage message
             TextBlock stageMessage = new()
