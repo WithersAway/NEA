@@ -19,6 +19,8 @@ namespace NEA
     public partial class MainWindow : Window
     {
         private bool saveClicked = false;
+        private int playerDamage = 1;
+        private List<Rectangle> ammopickups = [];
         private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3"];
         private Dictionary<string, Buff> UpgradeEffects = new();
         private TextBox InputPath;
@@ -62,9 +64,9 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
-            UpgradeEffects.Add(upgrades[0], new DamageBuff(1));
-            UpgradeEffects.Add(upgrades[1], new DamageBuff(2));
-            UpgradeEffects.Add(upgrades[2], new DamageBuff(3));
+            UpgradeEffects.Add(upgrades[0], new Buff(upgrades[0]));
+            UpgradeEffects.Add(upgrades[1], new Buff(upgrades[1]));
+            UpgradeEffects.Add(upgrades[2], new Buff(upgrades[2]));
             List<string> testingList =
             [
                 // temporary testing values for player stats & name & class
@@ -234,7 +236,12 @@ namespace NEA
                         if (enemy is Boss boss)
                         {
                             // Boss needs 5 * currentStage hits to die
-                            bool defeated = boss.ApplyHit();
+                            bool defeated = false;
+                            for (int i = 0; i < playerDamage; i++)
+                            {
+                                defeated = boss.ApplyHit();
+                            }
+                            
                             projectilesToRemove.Add(projectile);
 
                             if (defeated)
@@ -249,15 +256,31 @@ namespace NEA
                         {
                             enemiesToRemove.Add(enemy);
                             projectilesToRemove.Add(projectile);
-
-                            
-
+                            Rectangle ammopickup = new() 
+                            {
+                                Name = "ammopickup",
+                                Fill = Brushes.Black,
+                                Height = 10,
+                                Stroke = Brushes.Black,
+                                Width = 10
+                            };
+                            ammopickups.Add(ammopickup);
+                            MyCanvas.Children.Add(ammopickup);
+                            Canvas.SetLeft(ammopickup, Canvas.GetLeft(enemy.enemy));
+                            Canvas.SetTop(ammopickup, Canvas.GetTop(enemy.enemy));
                             MyCanvas.Children.Remove(enemy.enemy);
                             
                             MyCanvas.Children.Remove(projectile);
-                            player.SetAmmo(player.GetAmmo()+3);
+
                         }
                     }
+                }
+            }
+            foreach (Rectangle ammo in ammopickups)
+            {
+                if (CheckCollisionOfTwoRects(ammo, player.PlayerRectangle))
+                {
+                    player.SetAmmo(player.GetAmmo()+3);
                 }
             }
 
@@ -550,7 +573,20 @@ string path = "";
 
         }
         private void OnUpgradePicked(string key){
-            UpgradeEffects[key].ApplyBuff(UpgradeEffects[key]);
+            switch (UpgradeEffects[key].getBuffID())
+            {
+                case "Damage +1":
+                    playerDamage++;
+                    break;
+                case "Damage +2":
+                    playerDamage += 2;
+                    break;
+                case "Damage +3":
+                    playerDamage += 3;
+                    break;
+                default:
+                    break;
+            }
         }
         private async void PickUpgrade(){
             Random r = new Random();
@@ -646,7 +682,7 @@ string path = "";
                 });
                 obstacles.Add(newObstacle);
                 MyCanvas.Children.Add(newObstacle.obstacle);
-                Random r = new Random();
+                Random r = new();
                 Canvas.SetLeft(newObstacle.obstacle, r.Next(800));
                 Canvas.SetTop(newObstacle.obstacle, r.Next(600));
             }
@@ -806,7 +842,7 @@ string path = "";
             double x2 = Canvas.GetLeft(rect2);
             double y2 = Canvas.GetTop(rect2);
 
-            // Add small buffer (1 pixel) to make collisions cleaner
+            // Add small buffer (3 pixels) to make collisions cleaner
             const double buffer = 3.0;
 
             // Check for intersection with buffer

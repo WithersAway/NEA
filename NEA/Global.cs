@@ -9,7 +9,7 @@ public class Global
 }
 public class Game
 {
-    public static Game It; //made to allow static bodies to access game info
+    public static Game? It; //made to allow static bodies to access game info
     public int floor;
     public Player player;
     public Difficulty mode { get; set; }
