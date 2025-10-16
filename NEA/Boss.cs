@@ -13,7 +13,7 @@ public class Boss : Enemy
 
     }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
     internal BossGimmick Gimmick { get; set; }
 
     // Number of hits remaining for this boss in the current stage
