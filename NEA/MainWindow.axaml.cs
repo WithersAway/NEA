@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Net.Mail;
-using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development at home
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -19,6 +15,7 @@ namespace NEA
 {
     public partial class MainWindow : Window
     {
+        #region InitVariables
         private bool saveClicked = false;
         private int playerDamage = 1;
         private List<Rectangle> ammopickups = [];
@@ -39,7 +36,11 @@ namespace NEA
         private Label playerAmmo;
         private readonly DispatcherTimer gameTimer;
         private bool pauseMenuOpen = false;
-
+        private int currentStage = 1;
+        private bool stageTransitioning = false;
+        private DateTime lastDamageTime = DateTime.MinValue;
+        private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
+        #endregion
         List<int> enemystats =
             [
                 10,
@@ -51,7 +52,7 @@ namespace NEA
                 10,
                 2,
             ];
- List<int> bossstats =
+        List<int> bossstats =
             [
                 10,
                 10,
@@ -139,9 +140,6 @@ namespace NEA
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
         }
-        
-        private DateTime lastDamageTime = DateTime.MinValue;
-        private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
 
         private void MainWindow_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
@@ -209,10 +207,6 @@ namespace NEA
                 Close();
             }
         }
-        
-        private int currentStage = 1;
-        private bool stageTransitioning = false;
-        
         
         private void Update(Player player, List<Enemy> enemies)
         {
@@ -806,7 +800,7 @@ namespace NEA
             newBoss.InitializeForStage(currentStage);
             enemies.Add(newBoss);
 
-            // Add boss to canvas and position it
+            // Add boss to canvas and position it in centre
             MyCanvas.Children.Add(newBoss.enemy);
             double centerX = MyCanvas.Bounds.Width / 2 - newBoss.enemy.Width / 2;
             double centerY = MyCanvas.Bounds.Height / 2 - newBoss.enemy.Height / 2;
