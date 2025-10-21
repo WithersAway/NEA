@@ -19,8 +19,8 @@ namespace NEA
         private bool saveClicked = false;
         private int playerDamage = 1;
         private List<Rectangle> ammopickups = [];
-        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow"];
-        private Dictionary<string, Buff> UpgradeEffects = new();
+        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%"];
+        private Dictionary<string, Buff> UpgradeEffects = [];
         private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
         const double moveConstant = 5d;
@@ -70,7 +70,7 @@ namespace NEA
             {
                 UpgradeEffects.Add(upgrade, new Buff(upgrade));
             }
-            List<string> testingList =
+            List<string> playerStatTestingList =
             [
                 // temporary testing values for player stats & name & class
                 "TempName",
@@ -96,7 +96,7 @@ namespace NEA
                 Width = 30
             };
             
-            GameObject = new Game(testingList, PlayerRect, 1);
+            GameObject = new Game(playerStatTestingList, PlayerRect, 1);
            
             for (int i = 0; i < 5; i++)
             {
@@ -210,6 +210,7 @@ namespace NEA
         
         private void Update(Player player, List<Enemy> enemies)
         {
+            
             if (gameOver || stageTransitioning) {
              return;
             }
@@ -229,7 +230,6 @@ namespace NEA
             {
                 Canvas.SetTop(player.PlayerRectangle, 0);
             }
-
             double x = Canvas.GetLeft(player.PlayerRectangle);
             double y = Canvas.GetTop(player.PlayerRectangle);
 
@@ -253,36 +253,44 @@ namespace NEA
                             if (defeated)
                             {
                                 enemiesToRemove.Add(enemy);
-                                MyCanvas.Children.Remove(enemy.enemy);
+                                
                             }
 
                             MyCanvas.Children.Remove(projectile);
                         }
                         else
                         {
-                            enemiesToRemove.Add(enemy);
-                            projectilesToRemove.Add(projectile);
-                            Rectangle ammopickup = new() 
-                            {
-                                Name = "ammopickup",
-                                Fill = Brushes.Black,
-                                Height = 10,
-                                Stroke = Brushes.Black,
-                                Width = 10
-                            };
-                            ammopickups.Add(ammopickup);
-                            MyCanvas.Children.Add(ammopickup);
-                            Canvas.SetLeft(ammopickup, Canvas.GetLeft(enemy.enemy));
-                            Canvas.SetTop(ammopickup, Canvas.GetTop(enemy.enemy));
-                            MyCanvas.Children.Remove(enemy.enemy);
                             
-                            MyCanvas.Children.Remove(projectile);
-
+                            enemiesToRemove.Add(enemy);                
+                            projectilesToRemove.Add(projectile);                            
                         }
                     }
                 }
             }
+            
+                                
+            
+
+
             List<Rectangle> ammoPickupsToRemove = [];
+            foreach (Enemy enemy in enemiesToRemove)
+            {
+                Rectangle ammopickup = new() 
+                {
+                    Name = "ammopickup",
+                    Fill = Brushes.Green,
+                    Height = 10,
+                    Stroke = Brushes.Black,
+                    Width = 10
+                };
+                ammopickups.Add(ammopickup);
+                MyCanvas.Children.Add(ammopickup);
+                Canvas.SetLeft(ammopickup, Canvas.GetLeft(enemy.enemy));
+                Canvas.SetTop(ammopickup, Canvas.GetTop(enemy.enemy));
+                enemies.Remove(enemy);
+                MyCanvas.Children.Remove(enemy.enemy);
+            }
+            enemiesToRemove.Clear();
             foreach (Rectangle ammo in ammopickups)
             {
                 if (CheckCollisionOfTwoRects(ammo, player.PlayerRectangle))
@@ -295,19 +303,19 @@ namespace NEA
             }
             foreach (Rectangle ammo in ammoPickupsToRemove)
             {
+                MyCanvas.Children.Remove(ammo);
                 ammopickups.Remove(ammo);
             }
             ammoPickupsToRemove.Clear();
 
             // Remove marked enemies and projectiles
-            foreach (Enemy enemy in enemiesToRemove)
-            {
-                enemies.Remove(enemy);
-            }
+            
             foreach (Rectangle projectile in projectilesToRemove)
             {
                 playerProjectiles.Remove(projectile);
+                MyCanvas.Children.Remove(projectile);
             }
+            projectilesToRemove.Clear();
 
             // Check if all enemies are dead
             if (enemies.Count == 0 && !stageTransitioning)
@@ -401,7 +409,7 @@ namespace NEA
                     }
                 };
                 
-                await messageBox.ShowDialog(this);
+            await messageBox.ShowDialog(this);
             gameTimer.Start();
             pauseMenuOpen = false;
             
@@ -496,19 +504,19 @@ namespace NEA
             else
             {
                 try
-            {
-                using (StreamWriter sw = new StreamWriter(path))
-            {
-                sw.WriteLine(GameObject.floor);
-            };
-            saveClicked = true;
-            return;
-            }
-            catch (System.ArgumentNullException)
-            {
+                {
+                    using (StreamWriter sw = new StreamWriter(path))
+                    {
+                        sw.WriteLine(GameObject.floor);
+                    };
+                    saveClicked = true;
+                    return;
+                }
+                catch (System.ArgumentNullException)
+                {
                 
-                return;
-            }
+                    return;
+                }
             }
             
             
@@ -598,19 +606,19 @@ namespace NEA
             else
             {
                 try
-            {
-                using (StreamReader sw = new StreamReader(path))
-            {
-                GameObject.floor = int.Parse(sw.ReadLine()) - 1;
+                {
+                    using (StreamReader sw = new StreamReader(path))
+                    {
+                        GameObject.floor = int.Parse(sw.ReadLine()) - 1;
                         StartNextStage();
                     };
-            return;
-            }
-            catch (System.ArgumentNullException)
-            {
-                
-                return;
-            }
+                    return;
+                }
+                catch (System.ArgumentNullException)
+                {
+
+                    return;
+                }
             }
             
             
@@ -636,13 +644,16 @@ namespace NEA
                 case "Enemy Slow":
                     enemyMove *= 0.9;
                     break;
+                case "Projectile Size Up 25%":
+                    GameObject.player.SetProjSize(GameObject.player.GetProjSize() * 1.25);
+                    break;
                 default:
                     break;
             }
             
         }
         private async void PickUpgrade(){
-            Random r = new Random();
+            Random r = new();
             gameTimer.Stop();
             List<string> UpgradesAvailable = [];
             List<Button> UpgradePickButtons = [];
@@ -655,7 +666,11 @@ namespace NEA
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Thickness(20)
                 };
-                button.Click += (sender, e) => { OnUpgradePicked(UpgradesAvailable[index]); (((Button)sender).GetVisualRoot() as Window)?.Close(); };
+                button.Click += (sender, e) => 
+                { 
+                    OnUpgradePicked(UpgradesAvailable[index]); 
+                    (((Button)sender).GetVisualRoot() as Window)?.Close(); 
+                };
                 UpgradePickButtons.Add(button);
             }
             
@@ -717,10 +732,30 @@ namespace NEA
             
             MyCanvas.Children.Remove(stageMessage);
             if(currentStage % 5 != 0){
-            // Spawn new enemies
-            SpawnEnemies();
+                // Spawn new enemies
+                SpawnEnemies();
             }
-            else { SpawnBoss(); }
+            else 
+            { 
+                SpawnBoss(); 
+                TextBlock bossMessage = new()
+                {
+                    Text = $"Boss stage",
+                    FontSize = 48,
+                    Foreground = Brushes.White,
+                    Background = Brushes.Black,
+                    Padding = new Thickness(20),
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+                MyCanvas.Children.Add(bossMessage);
+                Canvas.SetLeft(bossMessage, (MyCanvas.Bounds.Width - 200) / 2);
+                Canvas.SetTop(bossMessage, (MyCanvas.Bounds.Height - 100) / 2);
+                // Wait for 2 seconds
+                await Task.Delay(2000);
+
+                MyCanvas.Children.Remove(bossMessage);
+            }
             SpawnObstacles();
             stageTransitioning = false;
         }
@@ -793,8 +828,8 @@ namespace NEA
 
             Boss newBoss = new(new Rectangle{
                 Fill = Brushes.Green, 
-                    Height = 45, 
-                    Width = 45 
+                Height = 45, 
+                Width = 45 
             }, bossstats, 1);
             // Initialize boss hits based on current stage
             newBoss.InitializeForStage(currentStage);
@@ -814,7 +849,7 @@ namespace NEA
             keysPressed.Add(e.Key);
         }
         
-        private Rect RectConverter(Rectangle rectangle) // currently unused after transition to Avalonia
+        private Rect RectConverter(Rectangle rectangle) // currently unused after transition to Avalonia as the avalonia Rectangle class works slightly differently to WPF
         // takes a rectangle and outputs the position and size as a Rect to be used in CheckCollisionOfTwoRects in
         // IntersectsWith method to allow to check collisions of player w/ enemy
         {
@@ -855,7 +890,7 @@ namespace NEA
             // Prevent division by zero / NaN when overlapping
             if (directDistance <= double.Epsilon)
             {
-                return; // Skip movement this tick (already colliding or exactly overlapping)
+                return; // Skip movement this tick
             }
 
             // Calculate movement
@@ -914,7 +949,7 @@ namespace NEA
             {
                 return;
             }
-            Rectangle projectile = new() { Fill = Brushes.Black, Height = 10, Width = 10 };
+            Rectangle projectile = new() { Fill = Brushes.Black, Height = GameObject.player.GetProjSize(), Width = GameObject.player.GetProjSize() };
             MyCanvas.Children.Add(projectile);
     
             double startX = Canvas.GetLeft(Sender.PlayerRectangle) + Sender.PlayerRectangle.Width / 2;
@@ -928,7 +963,7 @@ namespace NEA
             double length = Math.Sqrt(dirX * dirX + dirY * dirY);
             if (length <= double.Epsilon)
             {
-                // If mouse is exactly at the player's center, skip firing this tick
+                // If mouse is exactly at the player's center, skip firing this tick to avoid div 0
                 return;
             }
             dirX /= length;

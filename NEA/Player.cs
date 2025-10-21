@@ -13,6 +13,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     internal Specialise specialise { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected int invMax;
     private int Ammo = 10;
+    private double projectileSize = 10;
 
     //add playerdead check
     public bool IsPlayerDead()
@@ -28,6 +29,13 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     }
     public int GetAmmo(){
         return Ammo;
+    }
+    public void SetProjSize(double newProjSize)
+    {
+        projectileSize = newProjSize;
+    }
+    public double GetProjSize(){
+        return projectileSize;
     }
 
     internal enum Specialise
