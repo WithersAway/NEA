@@ -3,10 +3,7 @@ using Avalonia.Controls.Shapes;
 
 namespace NEA;
 
-public class Global
-{
-    
-}
+public class Global{}
 public class Game
 {
     public static Game? It; //made to allow static bodies to access game info
@@ -23,26 +20,26 @@ public class Game
         It = this;
     }
 
-public enum DamageTypes
-{
-    Acid,
-    Blunt,
-    Cold,
-    Electric,
-    Fire,
-    Magic,
-    Necrotic,
-    Piercing,
-    Poison,
-    Psychic,
-    Radiant,
-    Slashing,
-    Thunder
-}
-public enum Difficulty {
-    Sandbox,
-    Easy,
-    Medium, 
-    Hard,
-}
+    public enum DamageTypes
+    {
+        Acid,
+        Blunt,
+        Cold,
+        Electric,
+        Fire,
+        Magic,
+        Necrotic,
+        Piercing,
+        Poison,
+        Psychic,
+        Radiant,
+        Slashing,
+        Thunder
+    }
+    public enum Difficulty {
+        Sandbox,
+        Easy,
+        Medium, 
+        Hard,
+    }
 }

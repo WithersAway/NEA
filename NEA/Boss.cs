@@ -30,6 +30,7 @@ public class Boss : Enemy
     }
 
     // Apply a single hit; returns true when boss is defeated
+    // This is called once per player damage
     public bool ApplyHit()
     {
         if (HitsRemaining > 0)

@@ -17,9 +17,10 @@ namespace NEA
     {
         #region InitVariables
         private bool saveClicked = false;
-        private int playerDamage = 1;
+        
+        private bool callShop = false;
         private List<Rectangle> ammopickups = [];
-        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%"];
+        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%", "Scavenger (10%)"];
         private Dictionary<string, Buff> UpgradeEffects = [];
         private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
@@ -39,7 +40,9 @@ namespace NEA
         private int currentStage = 1;
         private bool stageTransitioning = false;
         private DateTime lastDamageTime = DateTime.MinValue;
+        private DateTime lastShotTime = DateTime.MinValue;
         private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
+        private double PlayerFireRate = 1;
         #endregion
         List<int> enemystats =
             [
@@ -239,11 +242,12 @@ namespace NEA
                 {
                     if (CheckCollisionOfTwoRects(projectile, enemy.enemy))
                     {
+                        double currentPlayerDamage = player.getPlayerDamage() * player.getPlayerDamageBase();
                         if (enemy is Boss boss)
                         {
                             // Boss needs 5 * currentStage hits to die
                             bool defeated = false;
-                            for (int i = 0; i < playerDamage; i++)
+                            for (int i = 0; i < currentPlayerDamage; i++)
                             {
                                 defeated = boss.ApplyHit();
                             }
@@ -253,7 +257,7 @@ namespace NEA
                             if (defeated)
                             {
                                 enemiesToRemove.Add(enemy);
-                                
+                                callShop = true;
                             }
 
                             MyCanvas.Children.Remove(projectile);
@@ -295,7 +299,7 @@ namespace NEA
             {
                 if (CheckCollisionOfTwoRects(ammo, player.PlayerRectangle))
                 {
-                    player.SetAmmo(player.GetAmmo()+5);
+                    player.SetAmmo(Convert.ToInt32(player.GetAmmo()+(player.getScavengeMod()*player.getPlayerAmmoMax())));
                     MyCanvas.Children.Remove(ammo);
                     ammoPickupsToRemove.Add(ammo);
 
@@ -629,13 +633,13 @@ namespace NEA
             switch (UpgradeEffects[key].getBuffID())
             {
                 case "Damage +1":
-                    playerDamage++;
+                    GameObject.player.setPlayerDamage(0.1);
                     break;
                 case "Damage +2":
-                    playerDamage += 2;
+                    GameObject.player.setPlayerDamage(0.2);
                     break;
                 case "Damage +3":
-                    playerDamage += 3;
+                    GameObject.player.setPlayerDamage(0.3);
                     break;
                 case "Heal":
                     GameObject.player.PlayerStats.Hp = 3;
@@ -646,6 +650,9 @@ namespace NEA
                     break;
                 case "Projectile Size Up 25%":
                     GameObject.player.SetProjSize(GameObject.player.GetProjSize() * 1.25);
+                    break;
+                case "Scavenger (+10% max ammo per pickup)":
+                    GameObject.player.setScavengerModifier(0.1);
                     break;
                 default:
                     break;
@@ -702,10 +709,148 @@ namespace NEA
             await saveMessageBox.ShowDialog(this);
             gameTimer.Start();
         }
+        private void OnItemBought(Item item){
+            if (item is Weapon)
+            {
+                GameObject.player.playerWeapon = Weapon.convertToWeapon(item);
+            }
+            else
+            {
+               GameObject.player.AddItemToInventory(item);
+            }
+            switch (item.GetItemType())
+            {
+                case "Longbow":
+                    PlayerFireRate = 3;
+                    GameObject.player.setPlayerDamageBase(5);
+                    GameObject.player.setPlayerAmmoMax(10);
+                    break;
+                case "Shortbow":
+                    PlayerFireRate = 0.5;
+                    GameObject.player.setPlayerDamageBase(1);
+                    GameObject.player.setPlayerAmmoMax(20);
+                    break;
+                case "Crossbow":
+                    PlayerFireRate = 1.25;
+                    GameObject.player.setPlayerDamageBase(3);
+                    GameObject.player.setPlayerAmmoMax(10);
+                    break;
+                case "Hand Crossbow":
+                    PlayerFireRate = 0.75;
+                    GameObject.player.setPlayerDamageBase(2);
+                    GameObject.player.setPlayerAmmoMax(25);
+                    break;
+                case "Heavy Crossbow":
+                    PlayerFireRate = 2.5;
+                    GameObject.player.setPlayerDamageBase(4);
+                    GameObject.player.setPlayerAmmoMax(15);
+                    break;
+                case "Toxicarp":
+                    PlayerFireRate = 0.25;
+                    GameObject.player.setPlayerDamageBase(1);
+                    GameObject.player.setPlayerAmmoMax(100);
+                    break;
+                case "Light Crossbow":
+                    PlayerFireRate = 1;
+                    GameObject.player.setPlayerDamageBase(2);
+                    GameObject.player.setPlayerAmmoMax(30);
+                    break;
+                case "Handgun":
+                    PlayerFireRate = 1;
+                    GameObject.player.setPlayerDamageBase(2);
+                    GameObject.player.setPlayerAmmoMax(10);
+                    break;
+                case "Rifle":
+                    PlayerFireRate = 2.5;
+                    GameObject.player.setPlayerDamageBase(5);
+                    GameObject.player.setPlayerAmmoMax(10);
+                    break;
+                case "Scoped Rifle":
+                    PlayerFireRate = 5;
+                    GameObject.player.setPlayerDamageBase(10);
+                    GameObject.player.setPlayerAmmoMax(15);
+                    break;
+                case "Pistol":
+                    PlayerFireRate = 0.75;
+                    GameObject.player.setPlayerDamageBase(2);
+                    GameObject.player.setPlayerAmmoMax(12);
+                    break;
+                case "Molten Fury":
+                    PlayerFireRate = 0.5;
+                    GameObject.player.setPlayerDamageBase(2);
+                    GameObject.player.setPlayerAmmoMax(20);
+                    break;
+                case "Aerial Bane":
+                    PlayerFireRate = 0;
+                    GameObject.player.setPlayerDamageBase(1);
+                    GameObject.player.setPlayerAmmoMax(40);
+                    break;
+                default:
+                    break;
+            }
+        }
+        private async void GoShop(){
+
+            Random r = new();
+            gameTimer.Stop();
+            Shop shop = new Shop(GameObject.floor);
+            List<Button> ItemBuyButtons = [];
+            foreach (Item item in shop.ItemsAvailable)
+            {
+                
+                var button = new Button{
+                    Content = item.GetItemName(),
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    Margin = new Thickness(20)
+                };
+                button.Click += (sender, e) => 
+                { 
+                    OnItemBought(item); 
+                    (((Button)sender).GetVisualRoot() as Window)?.Close(); 
+                };
+                ItemBuyButtons.Add(button);
+
+                
+            }
+            var stackPanel = new StackPanel
+            {
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Pick a weapon.",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                        Margin = new Thickness(20)
+                    },
+                }
+            };
+            foreach (Button button in ItemBuyButtons)
+            {
+                stackPanel.Children.Add(button);
+            }
+            var itemBuyBox = new Window()
+            {
+                Title = "Item Buy Menu",
+                Width = 450,
+                Height = 300,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = stackPanel
+
+            };
+            await itemBuyBox.ShowDialog(this);
+            gameTimer.Start();
+
+        }
         private async void StartNextStage()
         {
             PickUpgrade();
             GameObject.floor += 1;
+            if (callShop)
+            {
+                GoShop();
+                callShop = false;
+            }
+            
             GameObject.player.SetAmmo(10);
             stageTransitioning = true;
             currentStage = GameObject.floor;
@@ -945,6 +1090,12 @@ namespace NEA
         
         private void ShootProjectile(Player Sender)
         {
+            if (!((DateTime.Now - lastShotTime).TotalSeconds >= PlayerFireRate))
+            {
+                return;
+                
+            }
+
             if (!(Sender.GetAmmo() > 0))
             {
                 return;
@@ -976,6 +1127,7 @@ namespace NEA
             Canvas.SetLeft(projectile, startX);
             playerProjectiles.Add(projectile);
             Sender.SetAmmo(Sender.GetAmmo() - 1);
+            lastShotTime = DateTime.Now;
         }
         
         private static void MoveProjectiles(Rectangle projectile)

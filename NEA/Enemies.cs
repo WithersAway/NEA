@@ -7,15 +7,16 @@ namespace NEA;
 public class Enemy
 {
     
-        internal Stats EnemyStats { get; set; }
-        internal Item[] Loot { get; set; } = new Item[3];
-        internal Weapon Weapon { get; set; }
-        internal Rectangle enemy { get; set; }
-        public DateTime LastDamageTime { get; set; } = DateTime.MinValue;
+    internal Stats EnemyStats { get; set; }
+    internal Item[] Loot { get; set; } = new Item[3];
+    internal Weapon Weapon { get; set; }
+    internal Rectangle enemy { get; set; }
+    public DateTime LastDamageTime { get; set; } = DateTime.MinValue;
     
     public Enemy(Rectangle rectangleParameter, List<int> Stats)
     {
         enemy = rectangleParameter;
+        EnemyStats = new Stats(Convert.ToInt32(Stats[1]), Convert.ToInt32(Stats[2]), Convert.ToInt32(Stats[3]), Convert.ToInt32(Stats[4]), Convert.ToInt32(Stats[5]), Convert.ToInt32(Stats[6]), Convert.ToInt32(Stats[7]), Convert.ToInt32(Stats[8]));;
     }
 }
 
