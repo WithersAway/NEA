@@ -8,10 +8,10 @@ public class Item
     const double RelicMod = 1.25;
     const double ConsumableMod = 0.5;
     bool magic;
-    public Item(string name, int value, int rarity, bool relic, bool consumable, bool magic)
+    public Item(string name, int value, int rarity, bool relic, bool consumable, bool magic, int floor)
     {
         Name = name;
-        SetValue((int)Math.Round(CalculateCost(value)));
+        SetValue((int)Math.Round(CalculateCost(value, floor)));
         Rarity = (Rarity)rarity;
         Relic = relic;
         Consumable = consumable;
@@ -46,9 +46,9 @@ public class Item
     bool Consumable { get; }
     string itemType;
 
-    public double CalculateCost(double cost)
+    public double CalculateCost(double cost, int floor)
     {
-        cost = cost * (5 * Game.It.floor) * RarityModifier[(int)Rarity] * (int)Game.It.mode;
+        cost = cost * (5 * floor) * RarityModifier[(int)Rarity];
         if (Relic)
         {
             cost *= RelicMod;
@@ -69,21 +69,21 @@ public class Item
 public class Weapon : Item
 {
     Game.DamageTypes damageType;
-    public Weapon(string name, int value, int rarity, bool relic, bool consumable, int damagetype, bool magic) : base(name, value, rarity, relic, consumable, magic)
+    public Weapon(string name, int value, int rarity, bool relic, bool consumable, int damagetype, bool magic, int floor) : base(name, value, rarity, relic, consumable, magic, floor)
     {
         relic = false;
         consumable = false;
         damageType = (Game.DamageTypes)damagetype;
     }
-    public static Weapon convertToWeapon(Item item){
+    public static Weapon convertToWeapon(Item item, int floor){
         Random r = new();
-        Weapon weapon = new Weapon(item.GetItemName(), item.GetValue(), item.GetRarity(), false, false, r.Next(0, 13), item.GetMagic());
+        Weapon weapon = new Weapon(item.GetItemName(), item.GetValue(), item.GetRarity(), false, false, r.Next(0, 13), item.GetMagic(), floor);
         return weapon;
     }
 }
 public class Armor : Item
 {
-    public Armor(string name, int value, int rarity, bool relic, bool consumable, bool magic) : base(name, value, rarity, relic, consumable, magic)
+    public Armor(string name, int value, int rarity, bool relic, bool consumable, bool magic, int floor) : base(name, value, rarity, relic, consumable, magic, floor)
     {
         relic = false;
         consumable = false;

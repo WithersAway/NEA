@@ -383,8 +383,16 @@ namespace NEA
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                 Margin = new Thickness(20)
             };
+            var playerInfoButton = new Button
+            {
+                Content = "Player Info",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+
+            };
             saveButton.Click += OnSaveClicked;
             loadButton.Click += OnLoadClicked;
+            playerInfoButton.Click += OnInfoClicked;
             var messageBox = new Window()
                 {
                     Title = "Pause Menu",
@@ -423,6 +431,9 @@ namespace NEA
         }
         private void OnLoadClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
             LoadGame();
+        }
+        private void OnInfoClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            ShowInfo();
         }
         private async void SaveGame(){
             InputPath = new TextBox
@@ -629,7 +640,46 @@ namespace NEA
 
 
         }
+        private async void ShowInfo(){
+            string upgradespicked = "";
+            foreach (Buff item in GameObject.player.PlayerUpgrades)
+            {
+                upgradespicked += item.getBuffID();
+                upgradespicked += " ";
+            }
+            var PlayerInfo = new Window()
+                {
+                    Title = "Info",
+                    Width = 150,
+                    Height = 100,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new StackPanel
+                    {
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\n Player Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \n ",
+                                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                                Margin = new Thickness(20)
+                            },
+                            new TextBlock{
+                            Text = $"Upgrades Picked: {upgradespicked}",
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                            Margin = new Thickness(20)
+                            },
+
+                        }
+                    }
+
+                };
+
+            
+        }
+
+        
         private void OnUpgradePicked(string key){
+            GameObject.player.PlayerUpgrades.Add(UpgradeEffects[key]);
             switch (UpgradeEffects[key].getBuffID())
             {
                 case "Damage +1":
@@ -712,7 +762,7 @@ namespace NEA
         private void OnItemBought(Item item){
             if (item is Weapon)
             {
-                GameObject.player.playerWeapon = Weapon.convertToWeapon(item);
+                GameObject.player.playerWeapon = Weapon.convertToWeapon(item, GameObject.floor);
             }
             else
             {

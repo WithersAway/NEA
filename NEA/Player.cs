@@ -7,6 +7,7 @@ namespace NEA;
 public class Player(List<string> InitArgs, Rectangle rectIN)
 {
     public Rectangle PlayerRectangle { get; set; } = rectIN;
+    public List<Buff> PlayerUpgrades { get; set; } = [];
     public string Name { get; set; } = InitArgs[0];
     internal List<Item> Items { get; set; } = [];
     internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false);
@@ -18,6 +19,9 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
 
     public int getPlayerAmmoMax(){
         return playerAmmoMax;
+    }
+    public Weapon GetWeapon(){
+        return playerWeapon;
     }
     public void setPlayerAmmoMax(int value){
         playerAmmoMax = value;
