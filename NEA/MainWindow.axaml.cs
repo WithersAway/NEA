@@ -211,7 +211,7 @@ namespace NEA
             }
         }
         
-        private void Update(Player player, List<Enemy> enemies)
+        private void Update(Player player, List<Enemy> enemies)//
         {
             
             if (gameOver || stageTransitioning) {

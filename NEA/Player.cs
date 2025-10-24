@@ -10,7 +10,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public List<Buff> PlayerUpgrades { get; set; } = [];
     public string Name { get; set; } = InitArgs[0];
     internal List<Item> Items { get; set; } = [];
-    internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false);
+    internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false, 1);
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
     internal Specialise specialise { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected static int invMax = 5;
@@ -26,7 +26,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public void setPlayerAmmoMax(int value){
         playerAmmoMax = value;
     }
-    private int playerDamageBase = 1;
+    private int playerDamageBase = 3;
     public int getPlayerDamageBase(){
         return playerDamageBase;
     }

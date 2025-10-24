@@ -16,7 +16,7 @@ public class Enemy
     public Enemy(Rectangle rectangleParameter, List<int> Stats)
     {
         enemy = rectangleParameter;
-        EnemyStats = new Stats(Convert.ToInt32(Stats[1]), Convert.ToInt32(Stats[2]), Convert.ToInt32(Stats[3]), Convert.ToInt32(Stats[4]), Convert.ToInt32(Stats[5]), Convert.ToInt32(Stats[6]), Convert.ToInt32(Stats[7]), Convert.ToInt32(Stats[8]));;
+        EnemyStats = new Stats(Convert.ToInt32(Stats[0]),Convert.ToInt32(Stats[1]), Convert.ToInt32(Stats[2]), Convert.ToInt32(Stats[3]), Convert.ToInt32(Stats[4]), Convert.ToInt32(Stats[5]), Convert.ToInt32(Stats[6]), Convert.ToInt32(Stats[7]));
     }
 }
 

@@ -12,10 +12,10 @@ public class Shop{
     public Shop(int floor){
         for (int i = 0; i < floor; i++)
         {
-            ItemsAvailable.Add(GenItem());
+            ItemsAvailable.Add(GenItem(floor));
         }
     }
-    public Item GenItem(){
+    public Item GenItem(int floor){
         string name;
         int value;
         int rarity;
@@ -62,11 +62,11 @@ public class Shop{
         Item itemToReturn;
         if (!relic && !consumable)
         {
-            Weapon item = new(name, value, rarity, relic, consumable, 1, magic);
+            Weapon item = new(name, value, rarity, relic, consumable, 1, magic, floor);
             itemToReturn = item;
         }
         else{
-            Item item = new(name, value, rarity, relic, consumable, magic);
+            Item item = new(name, value, rarity, relic, consumable, magic, floor);
             itemToReturn = item;
         }
         
