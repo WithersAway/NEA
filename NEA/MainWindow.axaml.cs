@@ -211,7 +211,7 @@ namespace NEA
             }
         }
         
-        private void Update(Player player, List<Enemy> enemies)//
+        private void Update(Player player, List<Enemy> enemies)
         {
             
             if (gameOver || stageTransitioning) {
@@ -397,7 +397,7 @@ namespace NEA
                 {
                     Title = "Pause Menu",
                     Width = 450,
-                    Height = 300,
+                    Height = 350,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     Content = new StackPanel
                     {
@@ -416,7 +416,8 @@ namespace NEA
                                 Margin = new Thickness(20)
                             },
                             saveButton,
-                            loadButton
+                            loadButton,
+                            playerInfoButton
                         }
                     }
                 };
@@ -650,8 +651,8 @@ namespace NEA
             var PlayerInfo = new Window()
                 {
                     Title = "Info",
-                    Width = 150,
-                    Height = 100,
+                    Width = 300,
+                    Height = 300,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     Content = new StackPanel
                     {
@@ -659,7 +660,7 @@ namespace NEA
                         {
                             new TextBlock
                             {
-                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\n Player Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \n ",
+                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\nPlayer Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \n ",
                                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                                 Margin = new Thickness(20)
                             },
@@ -673,6 +674,8 @@ namespace NEA
                     }
 
                 };
+                await PlayerInfo.ShowDialog(this);
+                return;
 
             
         }

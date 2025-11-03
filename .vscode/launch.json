@@ -19,6 +19,13 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
-        }
+        },
+        {
+    "name": ".NET Meteor Profiler",
+    "type": "dotnet-meteor.debugger",
+    "request": "launch",
+    "profilerMode": "trace",
+    "preLaunchTask": "dotnet-meteor: Build"
+}
     ]
 }

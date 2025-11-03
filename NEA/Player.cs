@@ -40,7 +40,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public void setScavengerModifier(double value){
         scavengeModifier += value;
     }
-    private double playerDamage = 0;
+    private double playerDamage = 1;
     public double getPlayerDamage(){
         return playerDamage;
     }
