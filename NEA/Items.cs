@@ -16,7 +16,7 @@ public class Item
         Relic = relic;
         Consumable = consumable;
         this.magic = magic;
-        itemType = name[name.IndexOf(' ')..];
+        itemType = name[(name.IndexOf(' ')+1)..];
     }
 
     readonly List<double> RarityModifier = [1, 1.1, 1.25, 1.5, 2];

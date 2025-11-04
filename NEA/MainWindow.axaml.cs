@@ -646,7 +646,7 @@ namespace NEA
             foreach (Buff item in GameObject.player.PlayerUpgrades)
             {
                 upgradespicked += item.getBuffID();
-                upgradespicked += " ";
+                upgradespicked += ", ";
             }
             var PlayerInfo = new Window()
                 {
@@ -712,7 +712,7 @@ namespace NEA
             }
             
         }
-        private async void PickUpgrade(){
+        private async Task PickUpgrade(){
             Random r = new();
             gameTimer.Stop();
             List<string> UpgradesAvailable = [];
@@ -760,7 +760,7 @@ namespace NEA
 
             };
             await saveMessageBox.ShowDialog(this);
-            gameTimer.Start();
+            
         }
         private void OnItemBought(Item item){
             if (item is Weapon)
@@ -842,7 +842,7 @@ namespace NEA
                     break;
             }
         }
-        private async void GoShop(){
+        private async Task GoShop(){
 
             Random r = new();
             gameTimer.Stop();
@@ -891,20 +891,31 @@ namespace NEA
 
             };
             await itemBuyBox.ShowDialog(this);
-            gameTimer.Start();
+            
 
         }
         private async void StartNextStage()
         {
-            PickUpgrade();
+            Task task1 = PickUpgrade();
             GameObject.floor += 1;
-            if (callShop)
+            if(!callShop && GameObject.floor-1 != 1){
+                await task1;
+                gameTimer.Start();
+                
+            }
+            else if (callShop || GameObject.floor-1 == 1)
             {
-                GoShop();
+                Task task2 = GoShop();
                 callShop = false;
+                await Task.WhenAll(task1, task2);
+                gameTimer.Start();
+
             }
             
-            GameObject.player.SetAmmo(10);
+
+
+
+            GameObject.player.SetAmmo(GameObject.player.getPlayerAmmoMax());
             stageTransitioning = true;
             currentStage = GameObject.floor;
 

@@ -45,7 +45,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         return playerDamage;
     }
     public void setPlayerDamage(double value){
-        playerDamage = value;
+        playerDamage += value;
     }
     private double projectileSize = 10;
 
