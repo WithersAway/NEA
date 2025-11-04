@@ -17,10 +17,9 @@ namespace NEA
     {
         #region InitVariables
         private bool saveClicked = false;
-        
         private bool callShop = false;
         private List<Rectangle> ammopickups = [];
-        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%", "Scavenger (10%)"];
+        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%", "Scavenger (10%)", "Fire Rate Up 10%", "Fire Rate Up 20%", "Fire Rate Up 30%"];
         private Dictionary<string, Buff> UpgradeEffects = [];
         private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
@@ -43,7 +42,8 @@ namespace NEA
         private DateTime lastShotTime = DateTime.MinValue;
         private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
         private double PlayerFireRate = 1;
-        #endregion
+        private double PlayerFireRateBoost = 1;
+        
         List<int> enemystats =
             [
                 10,
@@ -66,6 +66,7 @@ namespace NEA
                 10,
                 20,
             ];
+            #endregion
         public MainWindow()
         {
             InitializeComponent();
@@ -143,27 +144,22 @@ namespace NEA
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
         }
-
         private void MainWindow_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
             ShootProjectile(GameObject.player);
         }
-
         private void MainWindow_KeyUp(object? sender, KeyEventArgs e)
         {
             keysPressed.Remove(e.Key);
         }
-
         private void GameTimer_Tick(object? sender, EventArgs e)
         {
             Update(GameObject.player, enemies);
         }
-
         private void MainWindow_PointerMoved(object? sender, PointerEventArgs e)
         {
             mousePosition = e.GetPosition(MyCanvas);
-        }
-        
+        }   
         private async void DealDamageToPlayer()
         {
             GameObject.player.PlayerStats.Hp -= 1; // Decrease HP by 1 for damage
@@ -209,8 +205,7 @@ namespace NEA
                 await messageBox.ShowDialog(this);
                 Close();
             }
-        }
-        
+        }  
         private void Update(Player player, List<Enemy> enemies)
         {
             
@@ -366,7 +361,20 @@ namespace NEA
                 MoveProjectiles(projectile);
             }
         }
-        
+        private void OnSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            SaveGame();
+        }
+        private void OnLoadClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            LoadGame();
+        }
+        private void OnInfoClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
+            ShowInfo();
+        }
+        private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
+        {
+            // simple wasd movement for player
+            keysPressed.Add(e.Key);
+        }
         private async void PauseMenu(){
             pauseMenuOpen = true;
             keysPressed.Remove(Key.Escape);
@@ -426,15 +434,6 @@ namespace NEA
             gameTimer.Start();
             pauseMenuOpen = false;
             
-        }
-        private void OnSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
-            SaveGame();
-        }
-        private void OnLoadClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
-            LoadGame();
-        }
-        private void OnInfoClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
-            ShowInfo();
         }
         private async void SaveGame(){
             InputPath = new TextBox
@@ -679,8 +678,6 @@ namespace NEA
 
             
         }
-
-        
         private void OnUpgradePicked(string key){
             GameObject.player.PlayerUpgrades.Add(UpgradeEffects[key]);
             switch (UpgradeEffects[key].getBuffID())
@@ -706,6 +703,15 @@ namespace NEA
                     break;
                 case "Scavenger (+10% max ammo per pickup)":
                     GameObject.player.setScavengerModifier(0.1);
+                    break;
+                case "Fire Rate Up 10%":
+                    PlayerFireRateBoost += 0.1;
+                    break;
+                case "Fire Rate Up 20%":
+                    PlayerFireRateBoost += 0.2;
+                    break;
+                case "Fire Rate Up 30%":
+                    PlayerFireRateBoost += 0.3;
                     break;
                 default:
                     break;
@@ -898,12 +904,13 @@ namespace NEA
         {
             Task task1 = PickUpgrade();
             GameObject.floor += 1;
-            if(!callShop && GameObject.floor-1 != 1){
+            if (!callShop && GameObject.floor - 1 != 1)
+            {
                 await task1;
                 gameTimer.Start();
-                
+
             }
-            else if (callShop || GameObject.floor-1 == 1)
+            else if (callShop || GameObject.floor - 1 == 1)
             {
                 Task task2 = GoShop();
                 callShop = false;
@@ -911,7 +918,7 @@ namespace NEA
                 gameTimer.Start();
 
             }
-            
+
 
 
 
@@ -938,15 +945,16 @@ namespace NEA
 
             // Wait for 2 seconds
             await Task.Delay(2000);
-            
+
             MyCanvas.Children.Remove(stageMessage);
-            if(currentStage % 5 != 0){
+            if (currentStage % 5 != 0)
+            {
                 // Spawn new enemies
                 SpawnEnemies();
             }
-            else 
-            { 
-                SpawnBoss(); 
+            else
+            {
+                SpawnBoss();
                 TextBlock bossMessage = new()
                 {
                     Text = $"Boss stage",
@@ -968,7 +976,6 @@ namespace NEA
             SpawnObstacles();
             stageTransitioning = false;
         }
-
         private void SpawnObstacles(){
             foreach (Obstacle obstacle in obstacles)
             {
@@ -990,7 +997,6 @@ namespace NEA
                 Canvas.SetTop(newObstacle.obstacle, r.Next(600));
             }
         }
-
         private void SpawnEnemies()
         {
             // Calculate number of enemies for new stage (starting amount + stage number - 1)
@@ -1026,7 +1032,6 @@ namespace NEA
                 Canvas.SetTop(newEnemy.enemy, centerY + Math.Sin(angle) * radius);
             }
         }
-
         private void SpawnBoss(){
             // Clear any remaining projectiles
             foreach (var projectile in playerProjectiles.ToList())
@@ -1051,13 +1056,6 @@ namespace NEA
             Canvas.SetLeft(newBoss.enemy, centerX);
             Canvas.SetTop(newBoss.enemy, centerY);
         }
-            
-        private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
-        {
-            // simple wasd movement for player
-            keysPressed.Add(e.Key);
-        }
-        
         private Rect RectConverter(Rectangle rectangle) // currently unused after transition to Avalonia as the avalonia Rectangle class works slightly differently to WPF
         // takes a rectangle and outputs the position and size as a Rect to be used in CheckCollisionOfTwoRects in
         // IntersectsWith method to allow to check collisions of player w/ enemy
@@ -1136,7 +1134,6 @@ namespace NEA
             MyCanvas.Children.Add(enemy.enemy);
 
         }
-
         private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2)
         {
             // Get positions
@@ -1150,16 +1147,15 @@ namespace NEA
 
             // Check for intersection with buffer
             return !(x1 + rect1.Width + buffer < x2 || x2 + rect2.Width + buffer < x1 || y1 + rect1.Height + buffer < y2 || y2 + rect2.Height + buffer < y1);
-        }
-        
+        }       
         private void ShootProjectile(Player Sender)
         {
-            if (!((DateTime.Now - lastShotTime).TotalSeconds >= PlayerFireRate))
+            //Check if player has ammo to shoot and shot cooldown has passed
+            double playerFireRateWithBoost = PlayerFireRate / PlayerFireRateBoost;
+            if (!((DateTime.Now - lastShotTime).TotalSeconds >= playerFireRateWithBoost))
             {
                 return;
-                
             }
-
             if (!(Sender.GetAmmo() > 0))
             {
                 return;
@@ -1192,8 +1188,7 @@ namespace NEA
             playerProjectiles.Add(projectile);
             Sender.SetAmmo(Sender.GetAmmo() - 1);
             lastShotTime = DateTime.Now;
-        }
-        
+        }        
         private static void MoveProjectiles(Rectangle projectile)
         {
             #pragma warning disable CS8605 //Disables warning (it got annoying)
