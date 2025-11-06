@@ -242,11 +242,8 @@ namespace NEA
                         {
                             // Boss needs 5 * currentStage hits to die
                             bool defeated = false;
-                            for (int i = 0; i < currentPlayerDamage; i++)
-                            {
-                                defeated = boss.ApplyHit();
-                            }
-                            
+                            defeated = boss.ApplyHit(currentPlayerDamage);
+
                             projectilesToRemove.Add(projectile);
 
                             if (defeated)

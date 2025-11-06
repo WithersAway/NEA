@@ -9,7 +9,6 @@ public class Enemy
     
     internal Stats EnemyStats { get; set; }
     internal Item[] Loot { get; set; } = new Item[3];
-    internal Weapon Weapon { get; set; }
     internal Rectangle enemy { get; set; }
     public DateTime LastDamageTime { get; set; } = DateTime.MinValue;
     

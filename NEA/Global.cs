@@ -6,7 +6,7 @@ namespace NEA;
 public class Global{}
 public class Game
 {
-    public static Game? It; //made to allow static bodies to access game info
+    
     public int floor;
     public Player player;
     public Difficulty mode { get; set; }
@@ -17,7 +17,7 @@ public class Game
         player = new Player(args, rect);
         mode = (Difficulty)difficulty;
 
-        It = this;
+        
     }
 
     public enum DamageTypes

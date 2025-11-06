@@ -20,7 +20,7 @@ public class Shop{
         int value;
         int rarity;
         bool relic, consumable, magic;
-        List<string> Adjective = ["Strong", "Warped", "Sighted", "Deadly", "Fine", "Grand", "Hasty", "Neat", "Rapid", "Unreal", "Precise", "Masterful"];
+        List<string> Adjective = ["Strong", "Warped", "Sighted", "Deadly", "Fine", "Grand", "Hasty", "Neat", "Rapid", "Unreal", "Precise", "Masterful, Antique"];
         List<string> weaponType = ["Longbow", "Shortbow", "Crossbow", "Hand Crossbow", "Heavy Crossbow", "Light Crossbow", "Handgun", "Rifle", "Scoped Rifle", "Pistol", "Molten Fury", "Aerial Bane", "Toxicarp"];
         Random r = new();
         relic = false;
@@ -62,8 +62,8 @@ public class Shop{
         Item itemToReturn;
         if (!relic && !consumable)
         {
-            Weapon item = new(name, value, rarity, relic, consumable, 1, magic, floor);
-            itemToReturn = item;
+            Weapon weapon = new(name, value, rarity, relic, consumable, 1, magic, floor);
+            itemToReturn = weapon;
         }
         else{
             Item item = new(name, value, rarity, relic, consumable, magic, floor);

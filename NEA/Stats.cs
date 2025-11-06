@@ -6,6 +6,7 @@ public class Stats
     {
         //int is a data type and therefore Intelligence => Smart
         //Setting up stats for use in combat
+        //these are currently pointless and not implemented
         public int StrMod { get; set; }
         public int DexMod { get; set; }
         public int ConMod { get; set; }
@@ -31,7 +32,7 @@ public class Stats
             }
             return StatsNotZero;
         }
-    private static int GetMod(int stat) => (int)Math.Ceiling(stat / 2d) - 5; //calculates modifier for a stat using the D&D 5e stat modifier formula
+    private static int GetMod(int stat) => (int)Math.Floor(stat / 2d) - 5; //calculates modifier for a stat using the D&D 5e stat modifier formula
 
     public Stats(int str, int dex, int con, int smart, int wis, int cha, int sanity, int hp) //constructor function to set stats and modifiers
         {

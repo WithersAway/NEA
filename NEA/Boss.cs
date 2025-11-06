@@ -17,7 +17,7 @@ public class Boss : Enemy
     internal BossGimmick Gimmick { get; set; }
 
     // Number of hits remaining for this boss in the current stage
-    public int HitsRemaining { get; private set; }
+    public double HitsRemaining { get; private set; }
 
     // Initialize boss hits as 5 * stage
     public void InitializeForStage(int stage)
@@ -29,13 +29,13 @@ public class Boss : Enemy
         
     }
 
-    // Apply a single hit; returns true when boss is defeated
-    // This is called once per player damage
-    public bool ApplyHit()
+
+    public bool ApplyHit(double damage)
     {
+        
         if (HitsRemaining > 0)
         {
-            HitsRemaining--;
+            HitsRemaining -= damage;
         }
         return HitsRemaining <= 0;
     }

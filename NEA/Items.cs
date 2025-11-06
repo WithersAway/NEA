@@ -19,7 +19,7 @@ public class Item
         itemType = name[(name.IndexOf(' ')+1)..];
     }
 
-    readonly List<double> RarityModifier = [1, 1.1, 1.25, 1.5, 2];
+    readonly List<double> RarityPriceModifier = [1, 1.1, 1.25, 1.5, 2];
     protected string Name { get;}
     public string GetItemName(){
         return Name;
@@ -49,7 +49,7 @@ public class Item
 
     public double CalculateCost(double cost, int floor)
     {
-        cost = cost * (5 * floor) * RarityModifier[(int)Rarity];
+        cost = cost * (5 * floor) * RarityPriceModifier[(int)Rarity];
         if (Relic)
         {
             cost *= RelicMod;
