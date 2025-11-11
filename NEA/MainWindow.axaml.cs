@@ -43,6 +43,7 @@ namespace NEA
         private DateTime lastShotTime = DateTime.MinValue;
         private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
         private double PlayerFireRate = 1;
+        Bitmap GoblinTexture = new("goblin.png");
         private double PlayerFireRateBoost = 1;
 
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
@@ -104,10 +105,10 @@ namespace NEA
             };
             
             GameObject = new Game(playerStatTestingList, PlayerRect, 1);
-           
+            
             for (int i = 0; i < 5; i++)
             {
-                enemies.Add(new Enemy(new Rectangle { Fill = Brushes.Black, Height = 35, Width = 25 }, enemystats));
+                enemies.Add(new Enemy(new Rectangle { Fill = new ImageBrush(GoblinTexture), Height = 50, Width = 50 }, enemystats));
             }
             playerAmmo = new()
             {
@@ -117,7 +118,6 @@ namespace NEA
                 FontSize = 25,
                 Content = $"Ammo: {GameObject.player.GetAmmo()}",
                 Background = Brushes.Aqua
-
             };
             MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
@@ -987,8 +987,8 @@ namespace NEA
                 Obstacle newObstacle = new(new Rectangle
                 {
                     Fill = Brushes.Cyan,
-                    Height = 30,
-                    Width = 30
+                    Height = 20,
+                    Width = 20
                 });
                 obstacles.Add(newObstacle);
                 MyCanvas.Children.Add(newObstacle.obstacle);
@@ -1014,9 +1014,9 @@ namespace NEA
             {
                 Enemy newEnemy = new(new Rectangle 
                 { 
-                    Fill = Brushes.Black, 
-                    Height = 35, 
-                    Width = 25 
+                    Fill = new ImageBrush(GoblinTexture), 
+                    Height = 50, 
+                    Width = 50 
                 }, enemystats);
                 
                 enemies.Add(newEnemy);
@@ -1127,8 +1127,8 @@ namespace NEA
                 Canvas.SetTop(enemy.enemy, currentEnemyY);
             }
             // make enemies look at player
-            double AngleToRotate = Math.Atan2(yDist, xDist) * (180 / Math.PI);
-            enemy.enemy.RenderTransform = new RotateTransform(AngleToRotate);
+            //double AngleToRotate = Math.Atan2(yDist, xDist) * (180 / Math.PI);
+            //enemy.enemy.RenderTransform = new RotateTransform(AngleToRotate);
 
             MyCanvas.Children.Remove(enemy.enemy);
             MyCanvas.Children.Add(enemy.enemy);
