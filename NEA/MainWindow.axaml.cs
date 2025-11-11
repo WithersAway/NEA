@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -43,7 +44,9 @@ namespace NEA
         private const double iFrameLength = 0.5d; // Seconds of invincibility after taking damage
         private double PlayerFireRate = 1;
         private double PlayerFireRateBoost = 1;
-        
+
+        private Bitmap playerSprite = new Bitmap("playerSprite.png");
+
         List<int> enemystats =
             [
                 10,
@@ -94,10 +97,10 @@ namespace NEA
             Rectangle PlayerRect = new()
             {
                 Name = "PlayerRect",
-                Fill = Brushes.HotPink,
-                Height = 50,
+                Fill = new ImageBrush(playerSprite),
+                Height = 54,
                 Stroke = Brushes.Black,
-                Width = 30
+                Width = 54
             };
             
             GameObject = new Game(playerStatTestingList, PlayerRect, 1);
