@@ -38,23 +38,23 @@ public class Shop{
         switch (r.Next(1,101)){
             case < 40:
                 rarity = 0;
-                name = "Common " + name;
+                
                 break;
             case < 60:
                 rarity = 1;
-                name = "Rare " + name;
+                
                 break;
             case < 75:
                 rarity = 2;
-                name = "Epic " + name;
+                
                 break;
             case < 95:
                 rarity = 3;
-                name = "Legendary " + name;
+                
                 break;
             case < 100:
                 rarity = 4;
-                name = "Unique " + name;
+                
                 break;
         }
         if (rarity >= 3)
