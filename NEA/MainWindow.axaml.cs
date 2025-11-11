@@ -656,7 +656,7 @@ namespace NEA
                         {
                             new TextBlock
                             {
-                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\nPlayer Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \n ",
+                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\nPlayer Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \nPlayer Fire Rate: {PlayerFireRate / PlayerFireRateBoost} second(s) per shot ",
                                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                                 Margin = new Thickness(20)
                             },
