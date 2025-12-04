@@ -6,6 +6,7 @@ namespace NEA;
 
 public class Player(List<string> InitArgs, Rectangle rectIN)
 {
+    #region Variables
     public Rectangle PlayerRectangle { get; set; } = rectIN;
     public List<Buff> PlayerUpgrades { get; set; } = [];
     public string Name { get; set; } = InitArgs[0];
@@ -16,6 +17,8 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     protected static int invMax = 5;
     private int Ammo = 10;
     private int playerAmmoMax = 10;
+    #endregion
+    #region subroutines
 
     public int getPlayerAmmoMax(){
         return playerAmmoMax;
@@ -33,7 +36,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public void setPlayerDamageBase(int value){
         playerDamageBase = value;
     }
-    private double scavengeModifier = 0.1;
+    private double scavengeModifier = 0.1f;
     public double getScavengeMod(){
         return scavengeModifier;
     }
@@ -77,6 +80,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public double GetProjSize(){
         return projectileSize;
     }
+    #endregion
 
     internal enum Specialise
     {
