@@ -20,6 +20,8 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     #endregion
     #region subroutines
 
+
+
     public int getPlayerAmmoMax(){
         return playerAmmoMax;
     }
@@ -81,6 +83,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         return projectileSize;
     }
     #endregion
+
 
     internal enum Specialise
     {

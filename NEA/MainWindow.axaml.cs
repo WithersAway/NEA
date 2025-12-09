@@ -35,6 +35,7 @@ namespace NEA
         bool gameOver = false;
         private Point mousePosition;
         private Label playerAmmo;
+        private Label PlayerHealth;
         private readonly DispatcherTimer gameTimer;
         private bool pauseMenuOpen = false;
         private int currentStage = 1;
@@ -91,7 +92,7 @@ namespace NEA
                 "10",
                 "3",
                 "0"
-            ]; // 10 in all stats, 15hp, warrior, name = tempname
+            ]; // 10 in all stats, 3hp, warrior, name = tempname
             
             
             // Setting up player sprite
@@ -105,7 +106,7 @@ namespace NEA
             };
             
             GameObject = new Game(playerStatTestingList, PlayerRect, 1);
-            
+            GameObject.player.PlayerStats.Hp = 3;
             for (int i = 0; i < 5; i++)
             {
                 enemies.Add(new Enemy(new Rectangle { Fill = new ImageBrush(GoblinTexture), Height = 50, Width = 50 }, enemystats));
@@ -119,6 +120,13 @@ namespace NEA
                 Content = $"Ammo: {GameObject.player.GetAmmo()}",
                 Background = Brushes.Aqua
             };
+            PlayerHealth = new(){
+                Name = "Player Health",
+                Height = 30,
+                Width = 50,
+                FontSize = 25,
+                Content = $"HP: {GameObject.player.PlayerStats.Hp}"
+            };
             MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
             foreach (Enemy Enemy in enemies)
@@ -128,7 +136,9 @@ namespace NEA
                 Canvas.SetLeft(Enemy.enemy, 160 * ii);
                 ii++;
             }
-            
+            MyCanvas.Children.Add(PlayerHealth);
+            Canvas.SetTop(PlayerHealth, 0);
+            Canvas.SetLeft(PlayerHealth, 50);
             MyCanvas.Children.Add(GameObject.player.PlayerRectangle);
             Canvas.SetTop(GameObject.player.PlayerRectangle, 100);
             Canvas.SetLeft(GameObject.player.PlayerRectangle, 100);
@@ -142,7 +152,7 @@ namespace NEA
             // Set up game loop timer
             gameTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16.66) // ~60 FPS, actually just under since 1/60 is 0.01666...
+                Interval = TimeSpan.FromMilliseconds(16.67)// ~60 FPS, actually just under since 1/60 is 0.01666...
             };
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
@@ -167,8 +177,10 @@ namespace NEA
         {
             GameObject.player.PlayerStats.Hp -= 1; // Decrease HP by 1 for damage
             
-            // Update HP display in window title
-            Title = $"HP: {GameObject.player.PlayerStats.Hp}";
+            // Update HP display in label
+            PlayerHealth.Content = $"HP: {GameObject.player.PlayerStats.Hp}";
+            MyCanvas.Children.Remove(PlayerHealth);
+            MyCanvas.Children.Add(PlayerHealth);
             
             // Check for game over
             if (GameObject.player.PlayerStats.Hp <= 0)
@@ -211,6 +223,9 @@ namespace NEA
         }  
         private void Update(Player player, List<Enemy> enemies)
         {
+            PlayerHealth.Content = "HP: " + player.PlayerStats.Hp.ToString();
+            MyCanvas.Children.Remove(PlayerHealth);
+            MyCanvas.Children.Add(PlayerHealth);
             
             if (gameOver || stageTransitioning) {
              return;
@@ -659,7 +674,7 @@ namespace NEA
                         {
                             new TextBlock
                             {
-                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\nPlayer Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \nPlayer Fire Rate: {PlayerFireRate / PlayerFireRateBoost} second(s) per shot ",
+                                Text = $"Player Weapon: {GameObject.player.GetWeapon().GetItemName()}\nPlayer Damage: {GameObject.player.getPlayerDamageBase()}, Multiplier {GameObject.player.getPlayerDamage()}x \nPlayer Fire Rate: {(PlayerFireRate / PlayerFireRateBoost).ToString("#.##")} second(s) per shot ",
                                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                                 Margin = new Thickness(20)
                             },
@@ -693,7 +708,9 @@ namespace NEA
                     break;
                 case "Heal":
                     GameObject.player.PlayerStats.Hp = 3;
-                    Title = $"HP: {GameObject.player.PlayerStats.Hp}";
+                    PlayerHealth.Content = $"HP: {GameObject.player.PlayerStats.Hp}";
+                    MyCanvas.Children.Remove(PlayerHealth);
+            MyCanvas.Children.Add(PlayerHealth);
                     break;
                 case "Enemy Slow":
                     enemyMove *= 0.9;
