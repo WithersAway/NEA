@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Intrinsics.X86;
 using Avalonia.Controls.Shapes;
+using Avalonia.Metadata;
 
 namespace NEA;
 
@@ -21,7 +22,6 @@ public class Game
         player = new Player(args, rect);
         mode = (Difficulty)difficulty;
         Level = new(800,600,1);
-        
     }
 
     public enum DamageTypes
@@ -59,7 +59,7 @@ public class NoiseGenerator
     public int Height {get;}
     public TileType[,] map {get; private set;}
 
-    private Random r;
+    private readonly Random r;
     private readonly int seed;
 
 
@@ -67,6 +67,7 @@ public class NoiseGenerator
     {
         Width = width;
         Height = height;
+        //if user provides a custom seed, then use it, otherwise hash a GUID to a 32 bit integer for a unique seed
         if (customseed.HasValue)
         {
             seed = customseed.Value;
@@ -88,7 +89,7 @@ public class NoiseGenerator
 
     private void GenerateNoise()
     {
-        float scale = 0.12f;
+        const float scale = 0.12f;
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
@@ -108,15 +109,21 @@ public class NoiseGenerator
 
 
     //smooth with cellular automata
+    #region cellularAutomata
+    #endregion
+
 
     //connectivity
 
 
-
+    #region Perlin
     //perlin
 
     private float Perlin(float x, float y) //takes in point (x, y)
     {
+        //ix -> intx, fx -> floatx
+        //abcd are corners
+        //u and v are weights
         int ix = (int)Math.Floor(x);
         int iy = (int)Math.Floor(y);
 
@@ -135,17 +142,21 @@ public class NoiseGenerator
         float u = fadeT(fx);
         float v = fadeT(fy);
 
-        return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value
+        return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
     }
 
 
     //lerp
 
-    private float Lerp (float a, float b, float t) => a + t * (b-a); //linear interpolation
+    private float Lerp (float a, float b, float t) => a + t * (b - a); //linear interpolation
 
     //fade
 
-    private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10); //smoothes curve to fit a fifth degree polynomial, taken directly from Ken Perlin (creator of Perlin noise)
+    private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10); 
+    //smoothes curve to fit a fifth degree polynomial, 
+    //taken directly from Ken Perlin (creator of Perlin noise)
+    //expands to: 6t^5 − 15t^4 + 10t^3
+
 
     //dotnoise
 
@@ -157,9 +168,10 @@ public class NoiseGenerator
         float[][] gradMap = 
         { 
             new[]{1f,1f}, new[]{-1f,1f}, new[]{1f,-1f}, new[]{-1f,-1f},
-            new[]{1f,0f}, new[]{-1f,0f}, new[]{0f,1f}, new[]{0f,-1f}
+            new[]{1f,0f}, new[]{-1f,0f}, new[]{0f, 1f}, new[]{ 0f,-1f}
         }; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
         float[] g = gradMap[hash];
         return g[0] * x + g[1] * y; //dot product formula
     }
+    #endregion
 }
