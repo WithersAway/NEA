@@ -83,6 +83,8 @@ public class NoiseGenerator
     public void Generate(){
         //Should have: generate noise, smooth map, ensure connectivity
         GenerateNoise();
+        SmoothMap(4);
+        EnsureConnectivity();
     }
 
     //generate using perlin noise
@@ -110,10 +112,88 @@ public class NoiseGenerator
 
     //smooth with cellular automata
     #region cellularAutomata
+    private void SmoothMap(int iterations)
+    {
+        for (int i = 0; i < iterations; i++)
+        {
+            TileType[,] newMap = (TileType[,])map.Clone();
+
+            for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+            {
+                int walls = CountWallsAround(x, y);
+
+                if (walls > 4) newMap[x, y] = TileType.Wall;
+                else if (walls < 4) newMap[x, y] = TileType.Floor;
+            }
+
+            map = newMap;
+        }
+    }
+
+    private int CountWallsAround(int x, int y)
+    {
+        int count = 0;
+
+        for (int nx = x - 1; nx <= x + 1; nx++)
+        for (int ny = y - 1; ny <= y + 1; ny++)
+        {
+            if (nx < 0 || ny < 0 || nx >= Width || ny >= Height)
+            {
+                count++;
+            }
+            else if (map[nx, ny] == TileType.Wall)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
     #endregion
 
 
     //connectivity
+    private void EnsureConnectivity()
+    {
+        // Find a starting floor tile
+        (int sx, int sy) = FindFirstFloor();
+
+        bool[,] visited = new bool[Width, Height];
+        FloodFill(sx, sy, visited);
+
+        // Convert unreachable floors into walls
+        for (int x = 0; x < Width; x++)
+        for (int y = 0; y < Height; y++)
+        {
+            if (map[x, y] == TileType.Floor && !visited[x, y])
+                map[x, y] = TileType.Wall;
+        }
+    }
+
+    private (int,int) FindFirstFloor()
+    {
+        for (int x = 0; x < Width; x++)
+        for (int y = 0; y < Height; y++)
+            if (map[x, y] == TileType.Floor)
+                return (x, y);
+
+        return (Width / 2, Height / 2);
+    }
+    //recursive subroutine to set enums
+    private void FloodFill(int x, int y, bool[,] visited)
+    {
+        if (x < 0 || y < 0 || x >= Width || y >= Height) return;
+        if (visited[x, y]) return;
+        if (map[x, y] == TileType.Wall) return;
+
+        visited[x, y] = true;
+
+        FloodFill(x + 1, y, visited);
+        FloodFill(x - 1, y, visited);
+        FloodFill(x, y + 1, visited);
+        FloodFill(x, y - 1, visited);
+    }
 
 
     #region Perlin
@@ -148,7 +228,7 @@ public class NoiseGenerator
 
     //lerp
 
-    private float Lerp (float a, float b, float t) => a + t * (b - a); //linear interpolation
+    private float Lerp(float a, float b, float t) => a + t * (b - a); //linear interpolation
 
     //fade
 
