@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.Intrinsics.X86;
 using Avalonia.Controls.Shapes;
-using Avalonia.Metadata;
 
 namespace NEA;
 
@@ -21,7 +18,7 @@ public class Game
         floor = 1;
         player = new Player(args, rect);
         mode = (Difficulty)difficulty;
-        Level = new(800,600,1);
+        Level = new(800,600,null);
     }
 
     public enum DamageTypes
@@ -59,7 +56,6 @@ public class NoiseGenerator
     public int Height {get;}
     public TileType[,] map {get; private set;}
 
-    private readonly Random r;
     private readonly int seed;
 
 
@@ -74,9 +70,8 @@ public class NoiseGenerator
         }
         else
         {
-            seed = Guid.NewGuid().GetHashCode();
+            seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but random seeds are 32 bit so hash the GUID for a small enough number
         }
-        r = new Random(seed);
         map = new TileType[Width, Height];
     }
 
@@ -96,7 +91,7 @@ public class NoiseGenerator
         {
             for (int j = 0; j < Height; j++)
             {
-                float perlin = Perlin(i * scale + seed, j * scale + seed);
+                float perlin = Perlin(i * scale, j * scale);
                 if (perlin > 0.45)
                 {
                     map[i,j] = TileType.Floor;
@@ -164,19 +159,19 @@ public class NoiseGenerator
 
         // Convert unreachable floors into walls
         for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
-        {
-            if (map[x, y] == TileType.Floor && !visited[x, y])
-                map[x, y] = TileType.Wall;
-        }
+            for (int y = 0; y < Height; y++)
+            {
+                if (map[x, y] == TileType.Floor && !visited[x, y])
+                    map[x, y] = TileType.Wall;
+            }
     }
 
     private (int,int) FindFirstFloor()
     {
         for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
-            if (map[x, y] == TileType.Floor)
-                return (x, y);
+            for (int y = 0; y < Height; y++)
+                if (map[x, y] == TileType.Floor)
+                    return (x, y);
 
         return (Width / 2, Height / 2);
     }
@@ -207,8 +202,8 @@ public class NoiseGenerator
         int ix = (int)Math.Floor(x);
         int iy = (int)Math.Floor(y);
 
-        float fx = x - ix; //separate floating point into integer part and floating part
-        float fy = y - iy;
+        float fx = x - ix; //separate fractional position in cell from grid co-ordinate, fx ∈ [0,1)
+        float fy = y - iy; //separate fractional position in cell from grid co-ordinate, fy ∈ [0,1)
 
         //this gets the 4 grid corners surrounding (x, y)
 
@@ -219,10 +214,13 @@ public class NoiseGenerator
         float d = DotProductNoise(ix + 1, iy + 1, fx - 1, fy - 1);
 
         //calculate interpolation weights
-        float u = fadeT(fx);
-        float v = fadeT(fy);
+        float u = fadeT(fx); // fx ∈ [0,1), otherwise fadeT returns a massive value
+        float v = fadeT(fy); // fy ∈ [0,1), otherwise fadeT returns a massive value
 
         return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
+        //three Lerps for bilinear interpolation, i.e. vertically and horizontally
+        //one Lerp interpolates along one line, two Lerps interpolates horizontally but never blends vertically. 
+        //Three lerps is the minimum for smooth 2d interpolation
     }
 
 
@@ -230,7 +228,7 @@ public class NoiseGenerator
 
     private float Lerp(float a, float b, float t) => a + t * (b - a); //linear interpolation
 
-    //fade
+    //fade (interpolation weights)
 
     private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10); 
     //smoothes curve to fit a fifth degree polynomial, 
@@ -238,20 +236,21 @@ public class NoiseGenerator
     //expands to: 6t^5 − 15t^4 + 10t^3
 
 
-    //dotnoise
+    //dot product for noise values
 
     private float DotProductNoise (int ix, int iy, float x, float y)
     {
-        //use large primes together with bitwise XOR for a pseudorandom seed hash
-        int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //xor gives different seeds every time, but the same world for the same seed every time
-        hash &= 7; //bitwise and limits number 0-7 for one of 8 gradients
+        //use large primes together with bitwise xor for a pseudorandom seed hash
+        int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //bitwise xor gives different seeds every time, but the same world for the same seed every time
+        hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         float[][] gradMap = 
         { 
             new[]{1f,1f}, new[]{-1f,1f}, new[]{1f,-1f}, new[]{-1f,-1f},
             new[]{1f,0f}, new[]{-1f,0f}, new[]{0f, 1f}, new[]{ 0f,-1f}
         }; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
         float[] g = gradMap[hash];
-        return g[0] * x + g[1] * y; //dot product formula
+        return g[0] * x + g[1] * y; //dot product formula as g is a 2x1 matrix and x and y are position vectors, therefore x,y is a positional matrix 2x2
+        //this must be converted to a scalar to have a singular float output
     }
     #endregion
 }

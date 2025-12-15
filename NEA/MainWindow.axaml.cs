@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development at home
+using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development on Linux
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
@@ -46,7 +46,6 @@ namespace NEA
         private double PlayerFireRate = 1;
         Bitmap GoblinTexture = new("goblin.png");
         private double PlayerFireRateBoost = 1;
-
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
 
         List<int> enemystats =
