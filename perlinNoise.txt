@@ -1,57 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Avalonia.Controls.Shapes;
-
-namespace NEA;
-
-public class Global{}
-public class Game
-{
-    public int floor;
-    public Player player;
-    public Difficulty mode { get; set; }
-    public NoiseGenerator Level;
-    List<Enemy> enemies = [];
-    public Game(List<string> args, Rectangle rect, int difficulty)
-    {
-        floor = 1;
-        player = new Player(args, rect);
-        mode = (Difficulty)difficulty;
-        Level = new(800,600,null);
-    }
-
-    public enum DamageTypes
-    {
-        Acid,
-        Blunt,
-        Cold,
-        Electric,
-        Fire,
-        Magic,
-        Necrotic,
-        Piercing,
-        Poison,
-        Psychic,
-        Radiant,
-        Slashing,
-        Thunder
-    }
-    public enum Difficulty {
-        Sandbox,
-        Easy,
-        Medium,
-        Hard,
-    }
-}
-
-public enum TileType{
-    Wall,
-    Floor
-}
-
 public class NoiseGenerator
 {
-    public int Width {get;}
+    public int Width {get;}    
     public int Height {get;}
     public TileType[,] map {get; private set;}
 
@@ -62,7 +11,7 @@ public class NoiseGenerator
     {
         Width = width;
         Height = height;
-        //if user provides a custom seed, then use it, otherwise hash a GUID to a 32 bit integer for a semi-unique seed
+        //if user provides a custom seed, then use it, otherwise hash a GUID to a 32 bit integer for a unique seed
         if (customseed.HasValue)
         {
             seed = customseed.Value;
@@ -85,7 +34,7 @@ public class NoiseGenerator
 
     private void GenerateNoise()
     {
-        const float scale = 0.15f;
+        const float scale = 0.12f;
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
@@ -218,7 +167,7 @@ public class NoiseGenerator
 
         return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
         //three Lerps for bilinear interpolation, i.e. vertically and horizontally
-        //one Lerp interpolates along one line, two Lerps interpolates horizontally but never blends vertically.
+        //one Lerp interpolates along one line, two Lerps interpolates horizontally but never blends vertically. 
         //Three lerps is the minimum for smooth 2d interpolation
     }
 
@@ -229,8 +178,8 @@ public class NoiseGenerator
 
     //fade (interpolation weights)
 
-    private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10);
-    //smoothes curve to fit a fifth degree polynomial,
+    private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10); 
+    //smoothes curve to fit a fifth degree polynomial, 
     //taken directly from Ken Perlin (creator of Perlin noise)
     //expands to: 6t^5 − 15t^4 + 10t^3
 
@@ -244,8 +193,8 @@ public class NoiseGenerator
         //using xor and large primes for a simple pseudorandom hash
         hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
-        float[][] gradMap =
-        {
+        float[][] gradMap = 
+        { 
             new[]{1f,1f}, new[]{-1f,1f}, new[]{1f,-1f}, new[]{-1f,-1f},
             new[]{1f,0f}, new[]{-1f,0f}, new[]{0f, 1f}, new[]{ 0f,-1f}
         }; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
