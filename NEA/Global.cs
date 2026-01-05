@@ -209,7 +209,7 @@ public class NoiseGenerator
         //get dot product for each corner
         float a = DotProductNoise(ix, iy, fx, fy);
         float b = DotProductNoise(ix + 1, iy, fx - 1, fy);
-        float c = DotProductNoise(ix, iy + 1, fx, fy - 1);
+        float c = DotProductNoise(ix, iy + 1, fx, fy - 1); //vector. Comitting crimes with both direction and MAGNITUDE!!! OH YEAH!
         float d = DotProductNoise(ix + 1, iy + 1, fx - 1, fy - 1);
 
         //calculate interpolation weights
@@ -241,7 +241,7 @@ public class NoiseGenerator
     {
         //use large primes together with bitwise xor for a pseudorandom seed hash
         int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //bitwise xor gives different seeds every time, but the same world for the same seed every time
-        //using xor and large primes for a simple pseudorandom hash
+        //using xor and large primes for a simple pseudorandom hashs seed
         hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
         float[][] gradMap =
