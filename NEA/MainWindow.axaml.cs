@@ -124,7 +124,7 @@ namespace NEA
                 Height = 30,
                 Width = 50,
                 FontSize = 25,
-                Content = $"HP: {GameObject.player.PlayerStats.Hp}"
+                Content = $"HP: {GameObject.player.GetHp()}"
             };
             MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
@@ -177,7 +177,7 @@ namespace NEA
             GameObject.player.PlayerStats.Hp -= 1; // Decrease HP by 1 for damage
             
             // Update HP display in label
-            PlayerHealth.Content = $"HP: {GameObject.player.PlayerStats.Hp}";
+            PlayerHealth.Content = $"HP: {GameObject.player.GetHp()}";
             MyCanvas.Children.Remove(PlayerHealth);
             MyCanvas.Children.Add(PlayerHealth);
             
@@ -222,7 +222,7 @@ namespace NEA
         }  
         private void Update(Player player, List<Enemy> enemies)
         {
-            PlayerHealth.Content = "HP: " + player.PlayerStats.Hp.ToString();
+            PlayerHealth.Content = $"HP: {GameObject.player.GetHp()}";
             MyCanvas.Children.Remove(PlayerHealth);
             MyCanvas.Children.Add(PlayerHealth);
             
@@ -526,7 +526,7 @@ namespace NEA
                 await ErrorBox.ShowDialog(this);
                 return;
             }
-            if (path == string.Empty)
+            if (path == string.Empty || saveClicked)
             {
                 return;
             }

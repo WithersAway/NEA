@@ -75,6 +75,9 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public int GetAmmo(){
         return Ammo;
     }
+    public int GetHp(){
+        return PlayerStats.Hp;
+    }
     public void SetProjSize(double newProjSize)
     {
         projectileSize = newProjSize;

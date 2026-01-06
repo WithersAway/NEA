@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/NEA/bin/Debug/net9.0/NEA.dll",
+            "program": "${workspaceFolder}/NEA/bin/Debug/net10.0/NEA.dll",
             "args": [],
             "cwd": "${workspaceFolder}/NEA",
             "console": "internalConsole",
