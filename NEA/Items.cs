@@ -30,6 +30,9 @@ public class Item
     {
         return value;
     }
+    public bool GetRelic(){
+        return Relic;
+    }
 
     private void SetValue(int value)
     {
@@ -80,6 +83,10 @@ public class Weapon : Item
         Random r = new();
         Weapon weapon = new Weapon(item.GetItemName(), item.GetValue(), item.GetRarity(), false, false, r.Next(0, 13), item.GetMagic(), floor);
         return weapon;
+    }
+    public static (string, string) GetWeaponAndModifier(Weapon weapon){
+        string[] splitweapon = weapon.Name.Split(' ');
+        return (splitweapon[0], splitweapon[1]);
     }
 }
 public class Armor : Item

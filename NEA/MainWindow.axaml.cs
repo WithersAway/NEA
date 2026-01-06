@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,10 +21,13 @@ namespace NEA
         private bool saveClicked = false;
         private bool callShop = false;
         private List<Rectangle> ammopickups = [];
-        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%", "Scavenger (10%)", "Fire Rate Up 10%", "Fire Rate Up 20%", "Fire Rate Up 30%"];
+        private readonly List<string> upgrades = ["Damage +1", "Damage +2", "Damage +3", "Heal", "Enemy Slow", "Projectile Size Up 25%", "Scavenger (10%)", 
+            "Fire Rate Up 10%", "Fire Rate Up 20%", "Fire Rate Up 30%", "Speed 10%"];
         private Dictionary<string, Buff> UpgradeEffects = [];
         private TextBox InputPath;
         public DateTime lastPlayerCollisionTime = DateTime.Now;
+        double moveModifier = 1d;
+        double projectilespeed = 1d;
         const double moveConstant = 5d;
         const double stuckMove = 10d;
         double enemyMove = 1d;
@@ -46,6 +50,7 @@ namespace NEA
         private double PlayerFireRate = 1;
         Bitmap GoblinTexture = new("goblin.png");
         private double PlayerFireRateBoost = 1;
+        private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
 
         List<int> enemystats =
@@ -119,12 +124,22 @@ namespace NEA
                 Content = $"Ammo: {GameObject.player.GetAmmo()}",
                 Background = Brushes.Aqua
             };
+            if (GameObject.player.GetHp() == null)
+            {
+                Debug.WriteLine("HP is null");
+            }
+            else
+            {
+                Debug.WriteLine($"HP = {GameObject.player.GetHp()}");
+            }
+
             PlayerHealth = new(){
-                Name = "Player Health",
+                Name = "PlayerHealth",
                 Height = 30,
-                Width = 50,
+                Width = 75,
                 FontSize = 25,
-                Content = $"HP: {GameObject.player.GetHp()}"
+                Content = $"HP: {GameObject.player.GetHp()}", 
+                Background = Brushes.Aqua
             };
             MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
@@ -350,10 +365,10 @@ namespace NEA
             }
             if (!PlayerCollision)
             {
-                if (keysPressed.Contains(Key.W)) { y -= moveConstant; }
-                if (keysPressed.Contains(Key.S)) { y += moveConstant; }
-                if (keysPressed.Contains(Key.A)) { x -= moveConstant; }
-                if (keysPressed.Contains(Key.D)) { x += moveConstant; }    
+                if (keysPressed.Contains(Key.W)) { y -= moveConstant * moveModifier; }
+                if (keysPressed.Contains(Key.S)) { y += moveConstant * moveModifier; }
+                if (keysPressed.Contains(Key.A)) { x -= moveConstant * moveModifier; }
+                if (keysPressed.Contains(Key.D)) { x += moveConstant * moveModifier; }    
             }
             else if (PlayerCollision)
             {
@@ -729,6 +744,9 @@ namespace NEA
                 case "Fire Rate Up 30%":
                     PlayerFireRateBoost += 0.3;
                     break;
+                case "Speed 10%":
+                    moveModifier += 0.1d;
+                    break;
                 default:
                     break;
             }
@@ -863,6 +881,131 @@ namespace NEA
                 default:
                     break;
             }
+            string weaponModifier = null;
+            string weaponType;
+            if (item is Weapon)
+            {
+
+                (weaponModifier, weaponType) = Weapon.GetWeaponAndModifier(Weapon.convertToWeapon(item, GameObject.floor));
+            }
+            #region ApplyModifier
+
+            //"Strong", "Warped", "Sighted", "Deadly", "Fine", "Grand", "Hasty", "Neat", "Rapid", "Unreal", "Precise", "Masterful", "Antique"
+            if (weaponModifier != null)
+            {
+                switch (weaponModifier)
+                {
+                    case "Strong":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        break;
+                    case "Warped":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.9));
+                        projectilespeed = 1.25d;
+                        PlayerFireRate *= 0.9d;
+                        break;
+                    case "Sighted":
+                        PlayerFireRate *= 0.75d;
+                        break;
+                    case "Deadly":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.1));
+                        PlayerFireRate *= 0.9d;
+                        break;
+                    case "Fine":
+                        //no change
+                        break;
+                    case "Grand":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.25));
+                        PlayerFireRate *= 1.2;
+                        break;
+                    case "Hasty":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.85));
+                        PlayerFireRate *= 0.6d;
+                        break;
+                    case "Neat":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.05));
+                        PlayerFireRate*= 0.95d;
+                        break;
+                    case "Rapid":
+                        PlayerFireRate *= 0.75d;
+                        break;
+                    case "Unreal":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        PlayerFireRate *= 0.85d;
+                        projectilespeed = 1.05d;
+                        break;
+                    case "Precise":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.5));
+                        PlayerFireRate *= 1.5d;
+                        projectilespeed = 1.2d;
+                        break;
+                    case "Masterful":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        break;
+                    case "Antique":
+                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.9));
+                        PlayerFireRate *= 1.15d;
+                        projectilespeed = 1.25d;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+            #endregion
+            if (item.GetRelic())
+            {
+                GameObject.player.AddRelic(item); 
+                /*
+                "AxiomCore",
+    "ChronicleOfAshAndLight",
+    "NullSigil",
+    "EonLens",
+    "SeveranceRelic",
+    "VaultedStar",
+    "ParadoxKeystone",
+    "PaleEngine",
+    "EchoReliquary",
+    "MeridianShard"
+                */
+                switch (item.GetItemName())
+                {
+                    //relics are powerful items with a significant downside
+                    case "AxiomCore":
+                        GameObject.player.setScavengerModifier(1);
+                        moveModifier = 0.3d;
+                        break;
+                    case "ChronicleOfAshAndLight":
+                        GameObject.player.setPlayerDamage(2);
+                        PlayerFireRateBoost = 0;
+                        break;
+                    case "NullSigil":
+                        GameObject.player.toggleInstadeath();
+                        GameObject.player.setPlayerDamage(2);
+                        break;
+                    case "EonLens":
+                        projectilespeedbase += 5d; 
+                        moveModifier = 0.5d;
+                        break;
+                    case "SeveranceRelic":
+                        PlayerFireRateBoost += 2;
+                        GameObject.player.toggleInstadeath();
+                        break;
+                    case "VaultedStar":
+                        break;
+                    case "ParadoxKeystone":
+                        break;
+                    case "PaleEngine":
+                        break;
+                    case "EchoReliquary":
+                        break;
+                    case "MeridianShard":
+                        break;
+
+                    default:
+                        break;
+                }
+
+            }   
         }
         private async Task GoShop(){
 
@@ -1205,13 +1348,13 @@ namespace NEA
             Sender.SetAmmo(Sender.GetAmmo() - 1);
             lastShotTime = DateTime.Now;
         }        
-        private static void MoveProjectiles(Rectangle projectile)
+        private void MoveProjectiles(Rectangle projectile)
         {
             #pragma warning disable CS8605 //Disables warning (it got annoying)
             Vector direction = (Vector)projectile.Tag;
             #pragma warning restore CS8605
 
-            double speed = moveConstant * 0.5;
+            double speed = projectilespeedbase * projectilespeed;
     
             Canvas.SetLeft(projectile, Canvas.GetLeft(projectile) + direction.X * speed);
             Canvas.SetTop(projectile, Canvas.GetTop(projectile) + direction.Y * speed);

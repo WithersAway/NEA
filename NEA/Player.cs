@@ -10,6 +10,8 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     public Rectangle PlayerRectangle { get; set; } = rectIN;
     public List<Buff> PlayerUpgrades { get; set; } = [];
     public string Name { get; set; } = InitArgs[0];
+    private bool Instadeath = false;
+    private List<Item> Relics { get; set; } = [];
     internal List<Item> Items { get; set; } = [];
     internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false, 1);
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
@@ -20,7 +22,9 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
     #endregion
     #region subroutines
 
-
+    public void toggleInstadeath(){
+        Instadeath = !Instadeath;
+    }
 
     public int getPlayerAmmoMax(){
         return playerAmmoMax;
@@ -67,6 +71,10 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         {
             Items.Add(item);
         }
+    }
+    public void AddRelic(Item item){
+        Relics.Clear();
+        Relics.Add(item);
     }
     public void SetAmmo(int NewAmmo)
     {
