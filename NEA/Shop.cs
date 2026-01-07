@@ -26,16 +26,7 @@ public class Shop{
         List<string> weaponType = ["Longbow", "Shortbow", "Crossbow", "HandCrossbow", "HeavyCrossbow", "LightCrossbow", "Handgun", "Rifle", "ScopedRifle", "Pistol", "MoltenFury",
          "AerialBane", "Toxicarp"];
         Random r = new();
-        relic = false;
-        consumable = false;
-        if (!relic && !consumable)
-        {
             name = Adjective[r.Next(0, Adjective.Count)] + " " + weaponType[r.Next(0, weaponType.Count)];    
-        }
-        else{
-            name = "Placeholder Name For Relic/Consumable";
-        }
-        
         value = 0;
         rarity = 0;
         switch (r.Next(1,101)){
@@ -68,15 +59,8 @@ public class Shop{
             magic = false;
         }
         Item itemToReturn;
-        if (!relic && !consumable)
-        {
-            Weapon weapon = new(name, value, rarity, relic, consumable, 1, magic, floor);
+            Weapon weapon = new(name, value, rarity, false, false, 1, magic, floor);
             itemToReturn = weapon;
-        }
-        else{
-            Item item = new(name, value, rarity, relic, consumable, magic, floor);
-            itemToReturn = item;
-        }
         
         
         return itemToReturn;

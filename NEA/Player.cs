@@ -76,6 +76,12 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         Relics.Clear();
         Relics.Add(item);
     }
+    public Item GetRelic(){
+        return Relics[0];
+    }
+    public bool HasRelic(){
+        return Relics.Count != 0;
+    }
     public void SetAmmo(int NewAmmo)
     {
         Ammo = NewAmmo;

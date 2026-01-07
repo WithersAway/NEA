@@ -504,6 +504,7 @@ namespace NEA
                 await saveMessageBox.ShowDialog(this);
                 
         }
+        
         private async void CommitSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
             string path = "";
             try
@@ -549,12 +550,30 @@ namespace NEA
             {
                 try
                 {
-                    using (StreamWriter sw = new StreamWriter(path))
+                    try
                     {
-                        sw.WriteLine(GameObject.floor);
-                    };
-                    saveClicked = true;
-                    return;
+                        using (StreamWriter sw = new StreamWriter(path))
+                        {
+                            
+                            sw.WriteLine("##~##");
+                            sw.WriteLine(GameObject.player.GetHp());
+                            sw.WriteLine(GameObject.player.GetWeapon().GetItemName());
+                            foreach (Buff upgrade in GameObject.player.PlayerUpgrades)
+                            {
+                                sw.WriteLine(upgrade.getBuffID());
+                            }
+                            if (GameObject.player.HasRelic())
+                            {
+                                sw.WriteLine(GameObject.player.GetRelic().GetItemName());    
+                            }
+                        };
+                        saveClicked = true;
+                        return;
+                    }
+                    catch(System.IO.DirectoryNotFoundException)
+                    {
+                        return;
+                    }
                 }
                 catch (System.ArgumentNullException)
                 {
@@ -828,12 +847,12 @@ namespace NEA
                     GameObject.player.setPlayerDamageBase(3);
                     GameObject.player.setPlayerAmmoMax(10);
                     break;
-                case "Hand Crossbow":
+                case "HandCrossbow":
                     PlayerFireRate = 0.75;
                     GameObject.player.setPlayerDamageBase(2);
                     GameObject.player.setPlayerAmmoMax(25);
                     break;
-                case "Heavy Crossbow":
+                case "HeavyCrossbow":
                     PlayerFireRate = 2.5;
                     GameObject.player.setPlayerDamageBase(4);
                     GameObject.player.setPlayerAmmoMax(15);
@@ -843,7 +862,7 @@ namespace NEA
                     GameObject.player.setPlayerDamageBase(1);
                     GameObject.player.setPlayerAmmoMax(100);
                     break;
-                case "Light Crossbow":
+                case "LightCrossbow":
                     PlayerFireRate = 1;
                     GameObject.player.setPlayerDamageBase(2);
                     GameObject.player.setPlayerAmmoMax(30);
@@ -858,7 +877,7 @@ namespace NEA
                     GameObject.player.setPlayerDamageBase(5);
                     GameObject.player.setPlayerAmmoMax(10);
                     break;
-                case "Scoped Rifle":
+                case "ScopedRifle":
                     PlayerFireRate = 5;
                     GameObject.player.setPlayerDamageBase(10);
                     GameObject.player.setPlayerAmmoMax(15);
@@ -868,12 +887,12 @@ namespace NEA
                     GameObject.player.setPlayerDamageBase(2);
                     GameObject.player.setPlayerAmmoMax(12);
                     break;
-                case "Molten Fury":
+                case "MoltenFury":
                     PlayerFireRate = 0.5;
                     GameObject.player.setPlayerDamageBase(2);
                     GameObject.player.setPlayerAmmoMax(20);
                     break;
-                case "Aerial Bane":
+                case "AerialBane":
                     PlayerFireRate = 0;
                     GameObject.player.setPlayerDamageBase(1);
                     GameObject.player.setPlayerAmmoMax(40);
@@ -972,7 +991,7 @@ namespace NEA
                     //relics are powerful items with a significant downside
                     case "AxiomCore":
                         GameObject.player.setScavengerModifier(1);
-                        moveModifier = 0.3d;
+                        moveModifier = 0.6d;
                         break;
                     case "ChronicleOfAshAndLight":
                         GameObject.player.setPlayerDamage(2);
