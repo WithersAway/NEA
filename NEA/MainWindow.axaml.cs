@@ -10,6 +10,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -18,6 +19,8 @@ namespace NEA
     public partial class MainWindow : Window
     {
         #region InitVariables
+        public bool hardmode = false;
+        public bool doubleshot = false;
         private bool saveClicked = false;
         private bool callShop = false;
         private List<Rectangle> ammopickups = [];
@@ -189,7 +192,15 @@ namespace NEA
         }   
         private async void DealDamageToPlayer()
         {
-            GameObject.player.PlayerStats.Hp -= 1; // Decrease HP by 1 for damage
+            if (!GameObject.player.InstadeathOn())
+            {
+                GameObject.player.PlayerStats.Hp -= 1; // Decrease HP by 1 for damage    
+            }
+            else
+            {
+                gameOver = true;
+            }
+            
             
             // Update HP display in label
             PlayerHealth.Content = $"HP: {GameObject.player.GetHp()}";
@@ -336,7 +347,7 @@ namespace NEA
             }
             ammoPickupsToRemove.Clear();
 
-            // Remove marked enemies and projectiles
+            // Remove marked projectiles
             
             foreach (Rectangle projectile in projectilesToRemove)
             {
@@ -556,16 +567,22 @@ namespace NEA
                         {
                             
                             sw.WriteLine("##~##");
+                            sw.WriteLine(GameObject.floor);
                             sw.WriteLine(GameObject.player.GetHp());
                             sw.WriteLine(GameObject.player.GetWeapon().GetItemName());
-                            foreach (Buff upgrade in GameObject.player.PlayerUpgrades)
-                            {
-                                sw.WriteLine(upgrade.getBuffID());
-                            }
                             if (GameObject.player.HasRelic())
                             {
                                 sw.WriteLine(GameObject.player.GetRelic().GetItemName());    
                             }
+                            else
+                            {
+                                sw.WriteLine("@");
+                            }
+                            foreach (Buff upgrade in GameObject.player.PlayerUpgrades)
+                            {
+                                sw.WriteLine(upgrade.getBuffID());
+                            }
+                            
                         };
                         saveClicked = true;
                         return;
@@ -670,9 +687,23 @@ namespace NEA
             {
                 try
                 {
-                    using (StreamReader sw = new StreamReader(path))
+                    using (StreamReader sr = new StreamReader(path))
                     {
-                        GameObject.floor = int.Parse(sw.ReadLine()) - 1;
+                        if (sr.ReadLine() != "##~##")
+                        {
+                            return;
+                        }
+                        GameObject.floor = int.Parse(sr.ReadLine()) - 1;
+                        GameObject.player.PlayerStats.Hp = int.Parse(sr.ReadLine());
+                        GameObject.player.playerWeapon = new Weapon(sr.ReadLine(), 1, 1, false, false, 1, false, 1);
+                        if (sr.Peek() != '@')
+                        {
+                            GameObject.player.AddRelic(new Item(sr.ReadLine(), 1, 1, true, false, true, 1 ));
+                        }
+                        while (sr.Peek() != -1)
+                        {
+                            OnUpgradePicked(sr.ReadLine());
+                        }
                         StartNextStage();
                     };
                     return;
@@ -683,10 +714,6 @@ namespace NEA
                     return;
                 }
             }
-            
-            
-
-
         }
         private async void ShowInfo(){
             string upgradespicked = "";
@@ -743,7 +770,7 @@ namespace NEA
                     GameObject.player.PlayerStats.Hp = 3;
                     PlayerHealth.Content = $"HP: {GameObject.player.PlayerStats.Hp}";
                     MyCanvas.Children.Remove(PlayerHealth);
-            MyCanvas.Children.Add(PlayerHealth);
+                    MyCanvas.Children.Add(PlayerHealth);
                     break;
                 case "Enemy Slow":
                     enemyMove *= 0.9;
@@ -764,7 +791,7 @@ namespace NEA
                     PlayerFireRateBoost += 0.3;
                     break;
                 case "Speed 10%":
-                    moveModifier += 0.1d;
+                    moveModifier *= 1.1d;
                     break;
                 default:
                     break;
@@ -1010,14 +1037,28 @@ namespace NEA
                         GameObject.player.toggleInstadeath();
                         break;
                     case "VaultedStar":
+                        GameObject.player.setPlayerDamage(2);
+                        moveModifier = 0.5d;
                         break;
                     case "ParadoxKeystone":
+                        PlayerFireRateBoost += 1;
+                        moveModifier = 0.7d;
                         break;
                     case "PaleEngine":
+                        PlayerFireRateBoost += 1;
+                        GameObject.player.setPlayerDamage(-2);
+                        if (GameObject.player.getPlayerDamage() < 0)
+                        {
+                            GameObject.player.setPlayerDamage(0-GameObject.player.getPlayerDamage());
+                        }
                         break;
                     case "EchoReliquary":
+                        doubleshot = true;
+                        moveModifier = 0.5d;
                         break;
                     case "MeridianShard":
+                        GameObject.player.toggleInstadeath();
+                        hardmode = true;
                         break;
 
                     default:
@@ -1338,6 +1379,7 @@ namespace NEA
             {
                 return;
             }
+            
             Rectangle projectile = new() { Fill = Brushes.Black, Height = GameObject.player.GetProjSize(), Width = GameObject.player.GetProjSize() };
             MyCanvas.Children.Add(projectile);
     
@@ -1364,7 +1406,16 @@ namespace NEA
             Canvas.SetTop(projectile, startY);
             Canvas.SetLeft(projectile, startX);
             playerProjectiles.Add(projectile);
-            Sender.SetAmmo(Sender.GetAmmo() - 1);
+            if (doubleshot)
+            {
+              playerProjectiles.Add(projectile);
+              Sender.SetAmmo(Sender.GetAmmo() - 2);
+            }
+            else
+            {
+                Sender.SetAmmo(Sender.GetAmmo() - 1);
+            }
+            
             lastShotTime = DateTime.Now;
         }        
         private void MoveProjectiles(Rectangle projectile)
