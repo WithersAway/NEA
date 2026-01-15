@@ -89,15 +89,6 @@ public class Weapon : Item
         return (splitweapon[0], splitweapon[1]);
     }
 }
-public class Armor : Item
-{
-    public Armor(string name, int value, int rarity, bool relic, bool consumable, bool magic, int floor) : base(name, value, rarity, relic, consumable, magic, floor)
-    {
-        relic = false;
-        consumable = false;
-    }
-        
-}
 enum Rarity
 {
     Common,

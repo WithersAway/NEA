@@ -38,12 +38,12 @@ public class NoiseGenerator
 
     private void GenerateNoise()
     {
-        const float scale = 0.15f;
+        const double scale = 0.15f;
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
             {
-                float perlin = Perlin(i * scale, j * scale);
+                double perlin = Perlin(i * scale, j * scale);
                 if (perlin > 0.45)
                 {
                     map[i,j] = TileType.Floor;
@@ -147,28 +147,28 @@ public class NoiseGenerator
     #region Perlin
     //perlin
 
-    private float Perlin(float x, float y) //takes in point (x, y)
+    private double Perlin(double x, double y) //takes in point (x, y)
     {
-        //ix -> intx, fx -> floatx
+        //ix -> intx, fx -> doublex
         //abcd are corners
         //u and v are weights
         int ix = (int)Math.Floor(x);
         int iy = (int)Math.Floor(y);
 
-        float fx = x - ix; //separate fractional position in cell from grid co-ordinate, fx ∈ [0,1)
-        float fy = y - iy; //separate fractional position in cell from grid co-ordinate, fy ∈ [0,1)
+        double fx = x - ix; //separate fractional position in cell from grid co-ordinate, fx ∈ [0,1)
+        double fy = y - iy; //separate fractional position in cell from grid co-ordinate, fy ∈ [0,1)
 
         //this gets the 4 grid corners surrounding (x, y)
 
         //get dot product for each corner
-        float a = DotProductNoise(ix, iy, fx, fy);
-        float b = DotProductNoise(ix + 1, iy, fx - 1, fy);
-        float c = DotProductNoise(ix, iy + 1, fx, fy - 1); //vector. Comitting crimes with both direction and MAGNITUDE!!! OH YEAH!
-        float d = DotProductNoise(ix + 1, iy + 1, fx - 1, fy - 1);
+        double a = DotProductNoise(ix, iy, fx, fy);
+        double b = DotProductNoise(ix + 1, iy, fx - 1, fy);
+        double c = DotProductNoise(ix, iy + 1, fx, fy - 1); //vector. Comitting crimes with both direction and MAGNITUDE!!! OH YEAH!
+        double d = DotProductNoise(ix + 1, iy + 1, fx - 1, fy - 1);
 
         //calculate interpolation weights
-        float u = fadeT(fx); // fx ∈ [0,1), otherwise fadeT returns a massive value
-        float v = fadeT(fy); // fy ∈ [0,1), otherwise fadeT returns a massive value
+        double u = fadeT(fx); // fx ∈ [0,1), otherwise fadeT returns a massive value
+        double v = fadeT(fy); // fy ∈ [0,1), otherwise fadeT returns a massive value
 
         return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
         //three Lerps for bilinear interpolation, i.e. vertically and horizontally
@@ -179,33 +179,36 @@ public class NoiseGenerator
 
     //lerp
 
-    private float Lerp(float a, float b, float t) => a + t * (b - a); //linear interpolation
+    private double Lerp(double a, double b, double t) => a + t * (b - a); //linear interpolation using two points, finding midpoint and using the interpolation weights returned by fadeT
 
     //fade (interpolation weights)
 
-    private float fadeT (float t) => t * t * t * (t * (t * 6 - 15) + 10);
+    private double fadeT (double t) => t * t * t * (t * (t * 6 - 15) + 10);
     //smoothes curve to fit a fifth degree polynomial,
     //taken directly from Ken Perlin (creator of Perlin noise)
     //expands to: 6t^5 − 15t^4 + 10t^3
+    //values less than one don't grow to insane sizes with exponentiation, so this curve is a good fit. 
+    //for values above one, consider using returning the value with Math.Pow(retval, 1/5)
+    //to reduce the value back near the original
 
 
     //dot product for noise values
 
-    private float DotProductNoise (int ix, int iy, float x, float y)
+    private double DotProductNoise (int ix, int iy, double x, double y)
     {
         //use large primes together with bitwise xor for a pseudorandom seed hash
         int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //bitwise xor gives different seeds every time, but the same world for the same seed every time
         //using xor and large primes for a simple pseudorandom hashs seed
         hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
-        float[][] gradMap =
+        double[][] gradMap =
         {
-            new[]{1f,1f}, new[]{-1f,1f}, new[]{1f,-1f}, new[]{-1f,-1f},
-            new[]{1f,0f}, new[]{-1f,0f}, new[]{0f, 1f}, new[]{ 0f,-1f}
+            new[]{1d,1d}, new[]{-1d,1d}, new[]{1d,-1d}, new[]{-1d,-1d},
+            new[]{1d,0d}, new[]{-1d,0d}, new[]{0d, 1d}, new[]{ 0d,-1d}
         }; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
-        float[] g = gradMap[hash];
+        double[] g = gradMap[hash];
         return g[0] * x + g[1] * y; //dot product formula as g is a 2x1 matrix and x and y are position vectors, therefore x,y is a positional matrix 2x2
-        //this must be converted to a scalar to have a singular float output
+        //this must be converted to a scalar to have a singular double output
     }
     #endregion
 }
