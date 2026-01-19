@@ -33,6 +33,7 @@ public class Item
     public bool GetRelic(){
         return Relic;
     }
+    
 
     private void SetValue(int value)
     {

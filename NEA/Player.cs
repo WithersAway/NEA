@@ -4,20 +4,22 @@ using Avalonia.Controls.Shapes;
 
 namespace NEA;
 
-public class Player(List<string> InitArgs, Rectangle rectIN)
+public class Player(List<string> InitArgs, Rectangle rectIN, string? relictoset = null)
 {
     #region Variables
     public Rectangle PlayerRectangle { get; set; } = rectIN;
     public List<Buff> PlayerUpgrades { get; set; } = [];
     public string Name { get; set; } = InitArgs[0];
     private bool Instadeath = false;
-    private Item? Relic {get; set;} = null;
+    private Item? Relic {get; set;} = relictoset != null ? new Item(relictoset, 1, 1, true, false, false, 1) : null;
     internal List<Item> Items { get; set; } = [];
     internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false, 1);
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
     internal Specialise PlayerClass { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected static int invMax = 5;
     private int Ammo = 10;
+    
+
     private int playerAmmoMax = 10;
     #endregion
     #region subroutines
@@ -76,10 +78,7 @@ public class Player(List<string> InitArgs, Rectangle rectIN)
         }
     }
     public void AddRelic(Item item){
-        if (Instadeath)
-        {
-            Instadeath = !Instadeath;
-        }
+        
         Relic = item;
     }
     public Item GetRelic(){

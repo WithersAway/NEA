@@ -112,7 +112,11 @@ namespace NEA
                 Width = 54
             };
             
-            GameObject = new Game(playerStatTestingList, PlayerRect, 1);
+            GameObject = new Game(playerStatTestingList, PlayerRect, 1, 600, 800);
+            if (GameObject.player.GetRelic() != null)
+            {
+                ApplyRelic(GameObject.player.GetRelic());
+            }
             GameObject.player.PlayerStats.Hp = 3;
             for (int i = 0; i < 5; i++)
             {
@@ -127,15 +131,6 @@ namespace NEA
                 Content = $"Ammo: {GameObject.player.GetAmmo()}",
                 Background = Brushes.Aqua
             };
-            if (GameObject.player.GetHp() == null)
-            {
-                Debug.WriteLine("HP is null");
-            }
-            else
-            {
-                Debug.WriteLine($"HP = {GameObject.player.GetHp()}");
-            }
-
             PlayerHealth = new(){
                 Name = "PlayerHealth",
                 Height = 30,
@@ -169,7 +164,7 @@ namespace NEA
             // Set up game loop timer
             gameTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16.67)// ~60 FPS, actually just under since 1/60 is 0.01666...
+                Interval = TimeSpan.FromMilliseconds(16.67)// ~60 FPS, actually just under since 1/60 is 0.01666... sec or 16.666... ms
             };
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
@@ -180,7 +175,8 @@ namespace NEA
         }
         private void MainWindow_KeyUp(object? sender, KeyEventArgs e)
         {
-            keysPressed.Remove(e.Key);
+            if(!stageTransitioning){keysPressed.Remove(e.Key);}
+            
         }
         private void GameTimer_Tick(object? sender, EventArgs e)
         {
@@ -199,6 +195,7 @@ namespace NEA
             else
             {
                 gameOver = true;
+                
             }
             
             
@@ -208,7 +205,7 @@ namespace NEA
             MyCanvas.Children.Add(PlayerHealth);
             
             // Check for game over
-            if (GameObject.player.PlayerStats.Hp <= 0)
+            if (GameObject.player.PlayerStats.Hp <= 0 || gameOver)
             {
                 gameOver = true;
                 
@@ -306,11 +303,6 @@ namespace NEA
                     }
                 }
             }
-            
-                                
-            
-
-
             List<Rectangle> ammoPickupsToRemove = [];
             foreach (Enemy enemy in enemiesToRemove)
             {
@@ -413,7 +405,11 @@ namespace NEA
         private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
         {
             // simple wasd movement for player
-            keysPressed.Add(e.Key);
+            if (!stageTransitioning)
+            {
+                keysPressed.Add(e.Key);    
+            }
+            
         }
         private async void PauseMenu(){
             pauseMenuOpen = true;
@@ -442,7 +438,7 @@ namespace NEA
             loadButton.Click += OnLoadClicked;
             playerInfoButton.Click += OnInfoClicked;
             var messageBox = new Window()
-                {
+            {
                     Title = "Pause Menu",
                     Width = 450,
                     Height = 350,
@@ -468,8 +464,7 @@ namespace NEA
                             playerInfoButton
                         }
                     }
-                };
-                
+            };    
             await messageBox.ShowDialog(this);
             gameTimer.Start();
             pauseMenuOpen = false;
@@ -548,7 +543,6 @@ namespace NEA
                             
                         }
                     }
-
                 };
                 await ErrorBox.ShowDialog(this);
                 return;
@@ -563,7 +557,7 @@ namespace NEA
                 {
                     try
                     {
-                        using (StreamWriter sw = new StreamWriter(path))
+                        using (StreamWriter sw = new(path))
                         {
                             
                             sw.WriteLine("##~##");
@@ -687,7 +681,7 @@ namespace NEA
             {
                 try
                 {
-                    using (StreamReader sr = new StreamReader(path))
+                    using (StreamReader sr = new(path))
                     {
                         if (sr.ReadLine() != "##~##")
                         {
@@ -998,21 +992,16 @@ namespace NEA
             }
             
             #endregion
-            if (item.GetRelic())
-            {
+            if (item.GetRelic()) {ApplyRelic(item);}
+            
+        }
+        private void ApplyRelic(Item item){
+{               
+                if(GameObject.player.HasRelic()){
+                    OnRelicRemove(GameObject.player.GetRelic());
+                }
                 GameObject.player.AddRelic(item); 
-                /*
-                "AxiomCore",
-    "ChronicleOfAshAndLight",
-    "NullSigil",
-    "EonLens",
-    "SeveranceRelic",
-    "VaultedStar",
-    "ParadoxKeystone",
-    "PaleEngine",
-    "EchoReliquary",
-    "MeridianShard"
-                */
+                
                 switch (item.GetItemName())
                 {
                     //relics are powerful items with a significant downside
@@ -1064,8 +1053,61 @@ namespace NEA
                     default:
                         break;
                 }
+                return;
+                
+
 
             }   
+        }
+        public void OnRelicRemove(Item item){
+                switch (item.GetItemName())
+                {
+                    //relics are powerful items with a significant downside
+                    case "AxiomCore":
+                        GameObject.player.setScavengerModifier(-1);
+                        moveModifier = 1d;
+                        break;
+                    case "ChronicleOfAshAndLight":
+                        GameObject.player.setPlayerDamage(-2);
+                        PlayerFireRateBoost = 1;
+                        break;
+                    case "NullSigil":
+                        GameObject.player.toggleInstadeath();
+                        GameObject.player.setPlayerDamage(-2);
+                        break;
+                    case "EonLens":
+                        projectilespeedbase -= 5d; 
+                        moveModifier = 1d;
+                        break;
+                    case "SeveranceRelic":
+                        PlayerFireRateBoost -= 2;
+                        GameObject.player.toggleInstadeath();
+                        break;
+                    case "VaultedStar":
+                        GameObject.player.setPlayerDamage(-2);
+                        moveModifier = 1d;
+                        break;
+                    case "ParadoxKeystone":
+                        PlayerFireRateBoost -= 1;
+                        moveModifier = 1d;
+                        break;
+                    case "PaleEngine":
+                        PlayerFireRateBoost -= 1;
+                        GameObject.player.setPlayerDamage(2);
+                        
+                        break;
+                    case "EchoReliquary":
+                        doubleshot = false;
+                        moveModifier = 1d;
+                        break;
+                    case "MeridianShard":
+                        GameObject.player.toggleInstadeath();
+                        hardmode = false;
+                        break;
+
+                    default:
+                        break;
+                }
         }
         private async Task GoShop(){
 

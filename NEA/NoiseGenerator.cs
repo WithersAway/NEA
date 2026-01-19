@@ -183,12 +183,12 @@ public class NoiseGenerator
 
     //fade (interpolation weights)
 
-    private double fadeT (double t) => t * t * t * (t * (t * 6 - 15) + 10);
+    private double fadeT (double t) => Math.Abs(t * t * t * (t * (t * 6 - 15) + 10));
     //smoothes curve to fit a fifth degree polynomial,
     //taken directly from Ken Perlin (creator of Perlin noise)
     //expands to: 6t^5 − 15t^4 + 10t^3
     //values less than one don't grow to insane sizes with exponentiation, so this curve is a good fit. 
-    //for values above one, consider using returning the value with Math.Pow(retval, 1/5)
+    //for values above one, consider using returning the value with Math.Pow(returnval, 1/5)
     //to reduce the value back near the original
 
 
