@@ -11,13 +11,13 @@ public class Game
     public Difficulty mode { get; set; }
     public NoiseGenerator Level;
     List<Enemy> enemies = [];
-    public Game(List<string> args, Rectangle rect, int difficulty, int hNG, int wNG, int? seed = null)
+    public Game(List<string> args, Rectangle rect, int difficulty, int wNG, int hNG, int? seed = null)
     {
         floor = 1;
         Level = new(wNG, hNG, seed);
         player = new Player(args, rect);
         mode = (Difficulty)difficulty;
-        Level = new(800,600,null);
+        
     }
 
     public enum DamageTypes

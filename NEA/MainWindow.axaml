@@ -8,5 +8,7 @@
         Width="800" Height="600">
     <Canvas Name="MyCanvas" Background="White">
         <Label Name="distance"  Content="Label" Canvas.Left="724" Canvas.Top="32"/>
+        
     </Canvas>
+    
 </Window>

@@ -43,8 +43,8 @@ public class NoiseGenerator
         {
             for (int j = 0; j < Height; j++)
             {
-                double perlin = Perlin(i * scale, j * scale);
-                if (perlin > 0.45)
+                double perlin = Perlin(i * scale + 1, j * scale + 1);
+                if (perlin > 0.25)
                 {
                     map[i,j] = TileType.Floor;
                 }

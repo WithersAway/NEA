@@ -8,6 +8,7 @@ using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for develo
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
+using Avalonia.Markup.Xaml.Converters;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -55,6 +56,7 @@ namespace NEA
         private double PlayerFireRateBoost = 1;
         private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
+        Rectangle[,] map;
 
         List<int> enemystats =
             [
@@ -112,7 +114,26 @@ namespace NEA
                 Width = 54
             };
             
-            GameObject = new Game(playerStatTestingList, PlayerRect, 1, 600, 800);
+            GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600);
+            /*<Image Name="MapImage"
+            Stretch="Uniform"
+            Width="800"
+            Height="600"/>*/
+            Image MapImage = new Image();
+            MapImage.Stretch = Stretch.Uniform;
+            MapImage.Width = 800;
+            MapImage.Height = 600;
+            //MapImage.Source = setupMap();
+
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                MapImage.Source = setupMap();
+            });
+            //Debug.WriteLine(MapImage.Source.Size);
+
+            MyCanvas.Children.Add(MapImage);
+            Canvas.SetLeft(MapImage, 0);
+            Canvas.SetTop(MapImage, 0);
             if (GameObject.player.GetRelic() != null)
             {
                 ApplyRelic(GameObject.player.GetRelic());
@@ -186,6 +207,52 @@ namespace NEA
         {
             mousePosition = e.GetPosition(MyCanvas);
         }   
+        private WriteableBitmap setupMap(){
+            int w, h;
+            w = GameObject.Level.map.GetLength(0);
+            h = GameObject.Level.map.GetLength(1);
+            WriteableBitmap wb = new WriteableBitmap(
+                new PixelSize(w,h),
+                new Vector(96,96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Opaque
+            );
+            //writing
+            using (var lb = wb.Lock())
+            {
+                unsafe //using pointers to access and change individual pixels in the writable bitmap as rectangles had performance issues
+                {
+                    byte* p = (byte*) lb.Address.ToPointer();
+                    for (int i = 0; i < h-1; i++)
+                    {
+                        for (int j = 0; j < w; j++)
+                        {
+                            int currIndex = i * lb.RowBytes + 4*j;
+                            if (currIndex < 0 || currIndex + 3 >= lb.RowBytes * h)
+                            {
+                                throw new IndexOutOfRangeException(
+                                    $"Pixel write out of bounds: index={currIndex}, buffer={lb.RowBytes * h}");
+                            }
+                            bool isWall = GameObject.Level.map[j,i] == TileType.Wall;
+                            byte colour;
+                            if (isWall)
+                            {
+                                colour = (byte)0;
+                            }
+                            else
+                            {
+                                colour =  (byte)255;
+                            }
+                            p[currIndex] = colour; //R value
+                            p[currIndex + 1] = colour; //G value
+                            p[currIndex + 2] = colour; //B value
+                            p[currIndex + 3] = 255; //Alpha (opacity, 255 is opaque, 0 is transparent)
+                        }
+                    }
+                }
+            }
+            return wb;
+        }
         private async void DealDamageToPlayer()
         {
             if (!GameObject.player.InstadeathOn())
@@ -998,7 +1065,7 @@ namespace NEA
         private void ApplyRelic(Item item){
 {               
                 if(GameObject.player.HasRelic()){
-                    OnRelicRemove(GameObject.player.GetRelic());
+                    RemoveRelic(GameObject.player.GetRelic());
                 }
                 GameObject.player.AddRelic(item); 
                 
@@ -1059,7 +1126,7 @@ namespace NEA
 
             }   
         }
-        public void OnRelicRemove(Item item){
+        public void RemoveRelic(Item item){
                 switch (item.GetItemName())
                 {
                     //relics are powerful items with a significant downside
@@ -1094,7 +1161,6 @@ namespace NEA
                     case "PaleEngine":
                         PlayerFireRateBoost -= 1;
                         GameObject.player.setPlayerDamage(2);
-                        
                         break;
                     case "EchoReliquary":
                         doubleshot = false;
@@ -1123,11 +1189,16 @@ namespace NEA
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Thickness(20)
                 };
+                if (item.GetRelic())
+                {
+                    button.Content += " - Taking this item will replace any other relic you have!";
+                }
                 button.Click += (sender, e) => 
                 { 
                     OnItemBought(item); 
                     (((Button)sender).GetVisualRoot() as Window)?.Close(); 
                 };
+                //lambda method to allow passing parameters to the event handler for button click
                 ItemBuyButtons.Add(button);
 
                 
@@ -1151,8 +1222,8 @@ namespace NEA
             var itemBuyBox = new Window()
             {
                 Title = "Item Buy Menu",
-                Width = 450,
-                Height = 300,
+                Width = 500,
+                Height = 600,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Content = stackPanel
 
