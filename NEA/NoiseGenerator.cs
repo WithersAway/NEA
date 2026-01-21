@@ -1,12 +1,17 @@
 using System;
+using System.Runtime.InteropServices;
+
 
 namespace NEA;
 
 public class NoiseGenerator
 {
+    
     public int Width {get;}
     public int Height {get;}
     public TileType[,] map {get; private set;}
+
+
 
     private readonly int seed;
 
@@ -25,6 +30,11 @@ public class NoiseGenerator
             seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but random seeds are 32 bit so hash the GUID for a small enough number
         }
         map = new TileType[Width, Height];
+    }
+
+    internal class Native(){
+        [DllImport("libc")]
+        internal static extern int getuid();
     }
 
     public void Generate(){

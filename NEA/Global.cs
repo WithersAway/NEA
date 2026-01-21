@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using Avalonia.Controls.Shapes;
+using System.Runtime.InteropServices;
 
 namespace NEA;
 
-public class Global{}
+public static class Global{
+    [DllImport("libc")] internal static extern int getuid();}
 public class Game
 {
     public int floor;
