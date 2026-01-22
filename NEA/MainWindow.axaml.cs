@@ -84,15 +84,7 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
-            try
-            {
-                _ = Global.getuid();
-            }
-            catch 
-            {
-                
-                Environment.Exit(0);
-            }
+            
             foreach (string upgrade in upgrades)
             {
                 UpgradeEffects.Add(upgrade, new Buff(upgrade));

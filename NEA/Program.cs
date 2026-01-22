@@ -15,6 +15,15 @@ class Program
     {
         BuildAvaloniaApp()
         .StartWithClassicDesktopLifetime(args);
+        try
+            {
+                _ = Global.getuid();
+            }
+            catch 
+            {
+                
+                Environment.Exit(0);
+            }
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
