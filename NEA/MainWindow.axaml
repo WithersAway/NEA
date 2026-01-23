@@ -5,7 +5,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="NEA.MainWindow"
         Title="NEA"
-        Width="800" Height="600">
+        Width="1920" Height="1080">
     <Canvas Name="MyCanvas" Background="White">
         <Label Name="distance"  Content="Label" Canvas.Left="724" Canvas.Top="32"/>
         

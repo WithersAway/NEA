@@ -56,7 +56,8 @@ namespace NEA
         private double PlayerFireRateBoost = 1;
         private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
-        Rectangle[,] map;
+        public Image MapImage = new Image();
+        WriteableBitmap map;
 
         List<int> enemystats =
             [
@@ -120,15 +121,16 @@ namespace NEA
             Stretch="Uniform"
             Width="800"
             Height="600"/>*/
-            Image MapImage = new Image();
-            MapImage.Stretch = Stretch.Uniform;
-            MapImage.Width = 800;
-            MapImage.Height = 600;
+            
+            MapImage.Stretch = Stretch.Fill;
+            MapImage.Width = 1920;
+            MapImage.Height = 1080;
             //MapImage.Source = setupMap();
 
             Dispatcher.UIThread.Invoke(() =>
             {
-                MapImage.Source = setupMap();
+                 map = setupMap();
+                MapImage.Source =map;
             });
             //Debug.WriteLine(MapImage.Source.Size);
 
@@ -215,11 +217,11 @@ namespace NEA
             WriteableBitmap wb = new WriteableBitmap(
                 new PixelSize(w,h),
                 new Vector(96,96),
-                PixelFormat.Bgra8888,
-                AlphaFormat.Opaque
+                PixelFormat.Rgba8888
+                //AlphaFormat.Opaque
             );
             //writing
-            using (var lb = wb.Lock())
+            using (var lb = wb.Lock()) //working, issue is with noise generation
             {
                 unsafe //using pointers to access and change individual pixels in the writable bitmap as rectangles had performance issues
                 {
@@ -244,10 +246,10 @@ namespace NEA
                             {
                                 colour =  (byte)255;
                             }
-                            p[currIndex] = colour; //R value
-                            p[currIndex + 1] = colour; //G value
-                            p[currIndex + 2] = colour; //B value
-                            p[currIndex + 3] = 255; //Alpha (opacity, 255 is opaque, 0 is transparent)
+                            p[currIndex] = colour; //RED value
+                            p[currIndex + 1] = colour; //GREEN value
+                            p[currIndex + 2] = colour; //BLUE value
+                            p[currIndex + 3] = 255; //ALPHA value
                         }
                     }
                 }
@@ -332,12 +334,12 @@ namespace NEA
                 EnemyMovement(player.PlayerRectangle, enemy);
             }
             
-            if (Canvas.GetTop(player.PlayerRectangle) > 600)
+            if (Canvas.GetTop(player.PlayerRectangle) > 1080)
             {
                 Canvas.SetTop(player.PlayerRectangle, 0);
             }
-            double x = Canvas.GetLeft(player.PlayerRectangle);
-            double y = Canvas.GetTop(player.PlayerRectangle);
+            int x = (int)Canvas.GetLeft(player.PlayerRectangle);
+            int y = (int)Canvas.GetTop(player.PlayerRectangle);
 
             foreach (Rectangle projectile in playerProjectiles)
             {
@@ -434,25 +436,32 @@ namespace NEA
             {
                 PauseMenu();
             }
-            if (!PlayerCollision)
-            {
-                if (keysPressed.Contains(Key.W)) { y -= moveConstant * moveModifier; }
-                if (keysPressed.Contains(Key.S)) { y += moveConstant * moveModifier; }
-                if (keysPressed.Contains(Key.A)) { x -= moveConstant * moveModifier; }
-                if (keysPressed.Contains(Key.D)) { x += moveConstant * moveModifier; }    
-            }
-            else if (PlayerCollision)
-            {
-                
-                if (keysPressed.Contains(Key.W)) { y += stuckMove; }
-                if (keysPressed.Contains(Key.S)) { y -= stuckMove; }
-                if (keysPressed.Contains(Key.A)) { x += stuckMove; }
-                if (keysPressed.Contains(Key.D)) { x -= stuckMove; }  
-            }
+
+//y -= moveConstant * moveModifier
+                double scaleX = map.PixelSize.Width  / (double)1920;
+                double scaleY = map.PixelSize.Height / (double)1080;
+
+
+                int collY, collx;
+                collY = -1;
+                collx = collY;
+                if (keysPressed.Contains(Key.W)) { TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
+                if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }//y should be +playerheight
+                if (keysPressed.Contains(Key.A)) { TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
+                if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }//x should be +playerwidth    
             
             
-            x = Math.Clamp(x, 0, 800-player.PlayerRectangle.Width);
-            y = Math.Clamp(y, 0, 600-player.PlayerRectangle.Height);
+            
+            if (collY != -1)
+            {
+                y = collY - (int)player.PlayerRectangle.Height;
+            }
+            else if (collx != -1)
+            {
+                x = collx - (int)player.PlayerRectangle.Width;
+            }
+            x = (int)Math.Clamp(x, 0, 1920-player.PlayerRectangle.Width);
+            y = (int)Math.Clamp(y, 0, 1080-player.PlayerRectangle.Height);
             Canvas.SetTop(player.PlayerRectangle, y);
             Canvas.SetLeft(player.PlayerRectangle, x);
 
@@ -461,6 +470,27 @@ namespace NEA
                 MoveProjectiles(projectile);
             }
         }
+        private Point ScreenToMap(int screenX, int screenY,
+                  int renderWidth, int renderHeight,
+                  Bitmap map)
+        {
+            double scaleX = map.PixelSize.Width  / (double)renderWidth;
+            double scaleY = map.PixelSize.Height / (double)renderHeight;
+
+            int mx = (int)(screenX * scaleX);
+            int my = (int)(screenY * scaleY);
+
+            return new Point(mx, my);
+        }
+        bool IsBlockedScreen(WriteableBitmap map,
+                     int screenX, int screenY,
+                     int renderWidth, int renderHeight)
+        {
+            var p = ScreenToMap(screenX, screenY, renderWidth, renderHeight, map);
+            return IsBlocked(map, (int)p.X, (int)p.Y);
+        }
+
+
         private void OnSaveClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e){
             SaveGame();
         }
@@ -1306,7 +1336,7 @@ namespace NEA
 
                 MyCanvas.Children.Remove(bossMessage);
             }
-            SpawnObstacles();
+            //SpawnObstacles();
             stageTransitioning = false;
         }
         private void SpawnObstacles(){
@@ -1467,6 +1497,40 @@ namespace NEA
             MyCanvas.Children.Add(enemy.enemy);
 
         }
+        private bool IsBlocked(WriteableBitmap map, int x, int y)
+        {
+            // Out of bounds = blocked
+            if (x < 0 || y < 0 || x >= map.PixelSize.Width || y >= map.PixelSize.Height)
+                return true;
+
+            using var fb = map.Lock();
+            unsafe
+            {
+                byte* ptr = (byte*)fb.Address;
+                int stride = fb.RowBytes;
+
+                int index = y * stride + x * 4;
+
+                byte b = ptr[index + 0];
+                byte g = ptr[index + 1];
+                byte r = ptr[index + 2];
+
+                // #000000
+                return r == 0 && g == 0 && b == 0;
+            }
+        }
+        private void TryMove(ref int x, ref int y, int dx, int dy, WriteableBitmap map)
+        {
+            int nx = x + dx;
+            int ny = y + dy;
+
+            if (!IsBlockedScreen(map, nx, ny, 1920, 1080))
+            {
+                x = nx;
+                y = ny;
+            }
+        }
+
         private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2)
         {
             // Get positions
@@ -1494,7 +1558,7 @@ namespace NEA
                 return;
             }
             
-            Rectangle projectile = new() { Fill = Brushes.Black, Height = GameObject.player.GetProjSize(), Width = GameObject.player.GetProjSize() };
+            Rectangle projectile = new() { Fill = Brushes.Crimson, Height = GameObject.player.GetProjSize(), Width = GameObject.player.GetProjSize() };
             MyCanvas.Children.Add(projectile);
     
             double startX = Canvas.GetLeft(Sender.PlayerRectangle) + Sender.PlayerRectangle.Width / 2;
@@ -1537,11 +1601,15 @@ namespace NEA
             #pragma warning disable CS8605 //Disables warning (it got annoying)
             Vector direction = (Vector)projectile.Tag;
             #pragma warning restore CS8605
-
+            int projX, projY;
+            projX = (int)Canvas.GetLeft(projectile);
+            projY = (int)Canvas.GetTop(projectile);
             double speed = projectilespeedbase * projectilespeed;
-    
-            Canvas.SetLeft(projectile, Canvas.GetLeft(projectile) + direction.X * speed);
-            Canvas.SetTop(projectile, Canvas.GetTop(projectile) + direction.Y * speed);
+            TryMove(ref projX, ref projY, (int)Math.Floor(direction.X * speed), (int)Math.Floor(direction.Y * speed), map);
+            
+            
+            Canvas.SetLeft(projectile, projX);
+            Canvas.SetTop(projectile, projY);
         }
     }
 }

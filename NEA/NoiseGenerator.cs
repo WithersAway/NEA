@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 
@@ -29,32 +30,37 @@ public class NoiseGenerator
         {
             seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but random seeds are 32 bit so hash the GUID for a small enough number
         }
+        
         map = new TileType[Width, Height];
+        Generate();
     }
 
-    internal class Native(){
-        [DllImport("libc")]
-        internal static extern int getuid();
-    }
+   
 
     public void Generate(){
         //Should have: generate noise, smooth map, ensure connectivity
         GenerateNoise();
-        SmoothMap(4);
-        EnsureConnectivity();
+        SmoothMap(1);
+        //EnsureConnectivity();
     }
 
     //generate using perlin noise
 
     private void GenerateNoise()
     {
-        const double scale = 0.15f;
+        const double scale = 0.06f;
+        const int blocksize = 8;
+        //double min = double.MaxValue;
+        //double max = double.MinValue;
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
             {
-                double perlin = Perlin(i * scale + 1, j * scale + 1);
-                if (perlin > 0.25)
+                double perlin = Perlin(i/blocksize * scale, j/blocksize * scale);
+                //min = Math.Min(min, perlin);
+                //max = Math.Max(max, perlin);
+                //Debug.WriteLine("Min: " + min + ", Max: " + max);
+                if (((perlin+1)/2) > 0.35)
                 {
                     map[i,j] = TileType.Floor;
                 }
@@ -180,7 +186,7 @@ public class NoiseGenerator
         double u = fadeT(fx); // fx ∈ [0,1), otherwise fadeT returns a massive value
         double v = fadeT(fy); // fy ∈ [0,1), otherwise fadeT returns a massive value
 
-        return Lerp(Lerp(a, b, u), Lerp(c, d, u), v); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
+        return Lerp(Lerp(a, b, u), Lerp(c, d, u), v) * Math.Sqrt(2); //blend using lerp for a noise value (left to right (a -> b, c -> d) with u, top to botton with v)
         //three Lerps for bilinear interpolation, i.e. vertically and horizontally
         //one Lerp interpolates along one line, two Lerps interpolates horizontally but never blends vertically.
         //Three lerps is the minimum for smooth 2d interpolation
@@ -193,7 +199,7 @@ public class NoiseGenerator
 
     //fade (interpolation weights)
 
-    private double fadeT (double t) => Math.Abs(t * t * t * (t * (t * 6 - 15) + 10));
+    private double fadeT (double t) => t * t * t * (t * (t * 6 - 15) + 10);
     //smoothes curve to fit a fifth degree polynomial,
     //taken directly from Ken Perlin (creator of Perlin noise)
     //expands to: 6t^5 − 15t^4 + 10t^3
@@ -211,11 +217,19 @@ public class NoiseGenerator
         //using xor and large primes for a simple pseudorandom hashs seed
         hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
+        //double[][] gradMap =
+        //{
+        //    new[]{1d,1d}, new[]{-1d,1d}, new[]{1d,-1d}, new[]{-1d,-1d},
+        //    new[]{1d,0d}, new[]{-1d,0d}, new[]{0d, 1d}, new[]{ 0d,-1d}
+        //}; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
+        double inv = 1.0 / Math.Sqrt(2);
         double[][] gradMap =
         {
-            new[]{1d,1d}, new[]{-1d,1d}, new[]{1d,-1d}, new[]{-1d,-1d},
-            new[]{1d,0d}, new[]{-1d,0d}, new[]{0d, 1d}, new[]{ 0d,-1d}
-        }; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
+            new[]{ inv,  inv}, new[]{-inv,  inv},
+            new[]{ inv, -inv}, new[]{-inv, -inv},
+            new[]{ 1d, 0d}, new[]{-1d, 0d},
+            new[]{ 0d, 1d}, new[]{ 0d,-1d}
+        };
         double[] g = gradMap[hash];
         return g[0] * x + g[1] * y; //dot product formula as g is a 2x1 matrix and x and y are position vectors, therefore x,y is a positional matrix 2x2
         //this must be converted to a scalar to have a singular double output
