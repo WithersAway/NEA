@@ -21,6 +21,7 @@ namespace NEA
     {
         #region InitVariables
         public bool hardmode = false;
+        public bool EnemiesUnstuckThisRound = false;
         public bool doubleshot = false;
         private bool saveClicked = false;
         private bool callShop = false;
@@ -57,6 +58,8 @@ namespace NEA
         private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
         public Image MapImage = new Image();
+        public Image bg = new Image();
+        
         WriteableBitmap map;
 
         List<int> enemystats =
@@ -85,7 +88,15 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
-            
+            Bitmap back = new("bg.png");
+            bg.Source = back;
+            bg.Stretch = Stretch.Fill;
+            bg.Width = 1920;
+            bg.Height = 1080;
+            MyCanvas.Children.Add(bg);
+            Canvas.SetTop(bg, 0);
+            Canvas.SetLeft(bg, 0);
+
             foreach (string upgrade in upgrades)
             {
                 UpgradeEffects.Add(upgrade, new Buff(upgrade));
@@ -111,9 +122,10 @@ namespace NEA
             {
                 Name = "PlayerRect",
                 Fill = new ImageBrush(playerSprite),
-                Height = 54,
+                Stretch = Stretch.Fill,
+                Height = 40,
                 Stroke = Brushes.Black,
-                Width = 54
+                Width = 40
             };
             
             GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600);
@@ -142,10 +154,7 @@ namespace NEA
                 ApplyRelic(GameObject.player.GetRelic());
             }
             GameObject.player.PlayerStats.Hp = 3;
-            for (int i = 0; i < 5; i++)
-            {
-                enemies.Add(new Enemy(new Rectangle { Fill = new ImageBrush(GoblinTexture), Height = 50, Width = 50 }, enemystats));
-            }
+            
             playerAmmo = new()
             {
                 Name = "AmmoCounter",
@@ -165,13 +174,7 @@ namespace NEA
             };
             MyCanvas.Children.Add(playerAmmo);
             int ii = 1;
-            foreach (Enemy Enemy in enemies)
-            {
-                MyCanvas.Children.Add(Enemy.enemy);
-                Canvas.SetTop(Enemy.enemy, 160 * ii);
-                Canvas.SetLeft(Enemy.enemy, 160 * ii);
-                ii++;
-            }
+            SpawnEnemies();
             MyCanvas.Children.Add(PlayerHealth);
             Canvas.SetTop(PlayerHealth, 0);
             Canvas.SetLeft(PlayerHealth, 50);
@@ -221,20 +224,20 @@ namespace NEA
                 //AlphaFormat.Opaque
             );
             //writing
-            using (var lb = wb.Lock()) //working, issue is with noise generation
+            using (var fb = wb.Lock()) 
             {
                 unsafe //using pointers to access and change individual pixels in the writable bitmap as rectangles had performance issues
                 {
-                    byte* p = (byte*) lb.Address.ToPointer();
+                    byte* p = (byte*) fb.Address.ToPointer();
                     for (int i = 0; i < h-1; i++)
                     {
                         for (int j = 0; j < w; j++)
                         {
-                            int currIndex = i * lb.RowBytes + 4*j;
-                            if (currIndex < 0 || currIndex + 3 >= lb.RowBytes * h)
+                            int currIndex = i * fb.RowBytes + 4*j;
+                            if (currIndex < 0 || currIndex + 3 >= fb.RowBytes * h)
                             {
                                 throw new IndexOutOfRangeException(
-                                    $"Pixel write out of bounds: index={currIndex}, buffer={lb.RowBytes * h}");
+                                    $"Pixel write out of bounds: index={currIndex}, buffer={fb.RowBytes * h}");
                             }
                             bool isWall = GameObject.Level.map[j,i] == TileType.Wall;
                             byte colour;
@@ -249,7 +252,7 @@ namespace NEA
                             p[currIndex] = colour; //RED value
                             p[currIndex + 1] = colour; //GREEN value
                             p[currIndex + 2] = colour; //BLUE value
-                            p[currIndex + 3] = 255; //ALPHA value
+                            p[currIndex + 3] = (byte)(255-colour); //ALPHA value
                         }
                     }
                 }
@@ -345,7 +348,7 @@ namespace NEA
             {
                 foreach (Enemy enemy in enemies)
                 {
-                    if (CheckCollisionOfTwoRects(projectile, enemy.enemy))
+                    if (IsTouching(projectile, enemy.enemy))
                     {
                         double currentPlayerDamage = player.getPlayerDamage() * player.getPlayerDamageBase();
                         if (enemy is Boss boss)
@@ -394,7 +397,7 @@ namespace NEA
             enemiesToRemove.Clear();
             foreach (Rectangle ammo in ammopickups)
             {
-                if (CheckCollisionOfTwoRects(ammo, player.PlayerRectangle))
+                if (IsTouching(ammo, player.PlayerRectangle))
                 {
                     player.SetAmmo(Convert.ToInt32(player.GetAmmo()+(player.getScavengeMod()*player.getPlayerAmmoMax())));
                     MyCanvas.Children.Remove(ammo);
@@ -424,33 +427,33 @@ namespace NEA
                 StartNextStage();
             }
             
-            bool PlayerCollision = false;
-            foreach (Obstacle obstacle in obstacles)
-            {
-                if (CheckObstacleCollision(player.PlayerRectangle, obstacle.obstacle))
-                {
-                    PlayerCollision = true;
-                }
-            }
             if (keysPressed.Contains(Key.Escape) && !pauseMenuOpen)
             {
                 PauseMenu();
             }
-
-//y -= moveConstant * moveModifier
-                double scaleX = map.PixelSize.Width  / (double)1920;
-                double scaleY = map.PixelSize.Height / (double)1080;
-
+            if (keysPressed.Contains(Key.F) && !EnemiesUnstuckThisRound)
+            {
+                EnemiesUnstuckThisRound = true;
+                Random r = new Random();
+                foreach (Enemy enemy in enemies)
+                {
+                    Canvas.SetLeft(enemy.enemy, 1920/2 + r.Next(1,50));
+                    Canvas.SetTop(enemy.enemy, 1080/2 + r.Next(1,50));
+                }
+            }
 
                 int collY, collx;
                 collY = -1;
                 collx = collY;
                 if (keysPressed.Contains(Key.W)) { TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
-                if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }//y should be +playerheight
+
+                if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; 
+                    TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }
+
                 if (keysPressed.Contains(Key.A)) { TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
-                if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }//x should be +playerwidth    
-            
-            
+
+                if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; 
+                    TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }
             
             if (collY != -1)
             {
@@ -486,7 +489,7 @@ namespace NEA
                      int screenX, int screenY,
                      int renderWidth, int renderHeight)
         {
-            var p = ScreenToMap(screenX, screenY, renderWidth, renderHeight, map);
+            Point p = ScreenToMap(screenX, screenY, renderWidth, renderHeight, map);
             return IsBlocked(map, (int)p.X, (int)p.Y);
         }
 
@@ -1034,10 +1037,10 @@ namespace NEA
                 switch (weaponModifier)
                 {
                     case "Strong":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.2));
                         break;
                     case "Warped":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.9));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 0.9));
                         projectilespeed = 1.25d;
                         PlayerFireRate *= 0.9d;
                         break;
@@ -1045,47 +1048,51 @@ namespace NEA
                         PlayerFireRate *= 0.75d;
                         break;
                     case "Deadly":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.1));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.1));
                         PlayerFireRate *= 0.9d;
                         break;
                     case "Fine":
                         //no change
                         break;
                     case "Grand":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.25));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.25));
                         PlayerFireRate *= 1.2;
                         break;
                     case "Hasty":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.85));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 0.85));
                         PlayerFireRate *= 0.6d;
                         break;
                     case "Neat":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.05));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.05));
                         PlayerFireRate*= 0.95d;
                         break;
                     case "Rapid":
                         PlayerFireRate *= 0.75d;
                         break;
                     case "Unreal":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.2));
                         PlayerFireRate *= 0.85d;
                         projectilespeed = 1.05d;
                         break;
                     case "Precise":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.5));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.5));
                         PlayerFireRate *= 1.5d;
                         projectilespeed = 1.2d;
                         break;
                     case "Masterful":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 1.2));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.2));
                         break;
                     case "Antique":
-                        GameObject.player.setPlayerDamageBase((int)Math.Truncate(GameObject.player.getPlayerDamageBase() * 0.9));
+                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 0.9));
                         PlayerFireRate *= 1.15d;
                         projectilespeed = 1.25d;
                         break;
                     default:
                         break;
+                }
+                if (GameObject.player.getPlayerDamageBase() < 1)
+                {
+                    GameObject.player.setPlayerDamageBase(1);
                 }
             }
             
@@ -1265,6 +1272,8 @@ namespace NEA
         }
         private async void StartNextStage()
         {
+            keysPressed.Clear();
+            EnemiesUnstuckThisRound = false;
             Task task1 = PickUpgrade();
             GameObject.floor += 1;
             if (!callShop && GameObject.floor - 1 != 1)
@@ -1375,6 +1384,7 @@ namespace NEA
             // Spawn new enemies
             for (int i = 0; i < enemyCount; i++)
             {
+                Random r = new();
                 Enemy newEnemy = new(new Rectangle 
                 { 
                     Fill = new ImageBrush(GoblinTexture), 
@@ -1384,15 +1394,18 @@ namespace NEA
                 
                 enemies.Add(newEnemy);
                 MyCanvas.Children.Add(newEnemy.enemy);
+                int x,y;
+                do
+                {
+                    
+                    x = r.Next(15,1920);
+                    y = r.Next(15,1080);
+                    
 
-                // Position enemies in a circle
-                double angle = Math.PI * 2 * i / enemyCount;
-                double radius = 200; // Distance from center
-                double centerX = MyCanvas.Bounds.Width / 2;
-                double centerY = MyCanvas.Bounds.Height / 2;
-
-                Canvas.SetLeft(newEnemy.enemy, centerX + Math.Cos(angle) * radius);
-                Canvas.SetTop(newEnemy.enemy, centerY + Math.Sin(angle) * radius);
+                }while (IsBlockedScreen(map, x,y,1920 + 25,1080 + 25));
+                Canvas.SetTop(newEnemy.enemy, y);
+                Canvas.SetLeft(newEnemy.enemy, x);
+                
             }
         }
         private void SpawnBoss(){
@@ -1420,7 +1433,7 @@ namespace NEA
             Canvas.SetTop(newBoss.enemy, centerY);
         }
         private Rect RectConverter(Rectangle rectangle) // currently unused after transition to Avalonia as the avalonia Rectangle class works slightly differently to WPF
-        // takes a rectangle and outputs the position and size as a Rect to be used in CheckCollisionOfTwoRects in
+        // takes a rectangle and outputs the position and size as a Rect to be used in IsTouching in
         // IntersectsWith method to allow to check collisions of player w/ enemy
         {
             double x = Canvas.GetLeft(rectangle);
@@ -1430,14 +1443,11 @@ namespace NEA
             
             return new Rect(x, y, width, height);
         }
-        private static bool CheckObstacleCollision(Rectangle mover, Rectangle Obstacle)
-        {
-            return CheckCollisionOfTwoRects(mover, Obstacle);
-        }
+        
         private void EnemyMovement(Rectangle player, Enemy enemy)
         {
             // check if a collision is present
-            if (CheckCollisionOfTwoRects(player, enemy.enemy))
+            if (IsTouching(player, enemy.enemy))
             {
                 // Check if enough time has passed since last damage (invincibility frames)
                 if ((DateTime.Now - lastDamageTime).TotalSeconds >= iFrameLength)
@@ -1471,21 +1481,31 @@ namespace NEA
             double nextY = currentEnemyY + yToMove;
             foreach (Obstacle obstacle in obstacles)
             {
-                if (CheckObstacleCollision(enemy.enemy, obstacle.obstacle))
+                if (IsTouching(enemy.enemy, obstacle.obstacle))
                 {
                     nextX = currentEnemyX - 2 * xToMove;
                     nextY = currentEnemyY - 2 * yToMove;
                 }
             }
+            if (!IsBlockedScreen(map, (int)nextX + 3, (int)nextY + 3, 1920, 1080))
+            {
+                Canvas.SetLeft(enemy.enemy, nextX);
+                Canvas.SetTop(enemy.enemy, nextY);
+            }
+            else
+            {
+                Canvas.SetLeft(enemy.enemy, currentEnemyX);
+                Canvas.SetTop(enemy.enemy, currentEnemyY);
+            }
             
-            Canvas.SetLeft(enemy.enemy, nextX);
-            if (CheckCollisionOfTwoRects(player, enemy.enemy))
+            
+            if (IsTouching(player, enemy.enemy))
             {
                 Canvas.SetLeft(enemy.enemy, currentEnemyX);
             }
             
-            Canvas.SetTop(enemy.enemy, nextY);
-            if (CheckCollisionOfTwoRects(player, enemy.enemy))
+            
+            if (IsTouching(player, enemy.enemy))
             {
                 Canvas.SetTop(enemy.enemy, currentEnemyY);
             }
@@ -1531,7 +1551,7 @@ namespace NEA
             }
         }
 
-        private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2)
+        private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2) //unused
         {
             // Get positions
             double x1 = Canvas.GetLeft(rect1);
@@ -1545,6 +1565,20 @@ namespace NEA
             // Check for intersection with buffer
             return !(x1 + rect1.Width + buffer < x2 || x2 + rect2.Width + buffer < x1 || y1 + rect1.Height + buffer < y2 || y2 + rect2.Height + buffer < y1);
         }       
+        private bool IsTouching(Rectangle a, Rectangle b){
+            bool c = false;
+            double x1 = Canvas.GetLeft(a);
+            double y1 = Canvas.GetTop(a);
+            double x2 = Canvas.GetLeft(b);
+            double y2 = Canvas.GetTop(b);
+            Rect aRect = new Rect(x1, y1, a.Width, a.Height);
+            Rect bRect = new Rect(x2, y2, b.Width, b.Height);
+            if (aRect.Intersects(bRect))
+            {
+                c = true;
+            }
+            return c;
+        }
         private void ShootProjectile(Player Sender)
         {
             //Check if player has ammo to shoot and shot cooldown has passed
@@ -1581,8 +1615,8 @@ namespace NEA
             // Store direction with the projectile
             projectile.Tag = new Vector(dirX, dirY);
     
-            Canvas.SetTop(projectile, startY);
-            Canvas.SetLeft(projectile, startX);
+            Canvas.SetTop(projectile, startY + projectile.Height/2);
+            Canvas.SetLeft(projectile, startX + projectile.Width/2);
             playerProjectiles.Add(projectile);
             if (doubleshot)
             {

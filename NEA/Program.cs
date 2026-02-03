@@ -19,7 +19,7 @@ class Program
             {
                 _ = Global.getuid();
             }
-            catch 
+        catch 
             {
                 
                 Environment.Exit(0);
