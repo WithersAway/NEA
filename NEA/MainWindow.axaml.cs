@@ -58,7 +58,7 @@ namespace NEA
         private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
         public Image MapImage = new Image();
-        public Image bg = new Image();
+        //public Image bg = new Image();
         
         WriteableBitmap map;
 
@@ -88,14 +88,7 @@ namespace NEA
         public MainWindow()
         {
             InitializeComponent();
-            Bitmap back = new("bg.png");
-            bg.Source = back;
-            bg.Stretch = Stretch.Fill;
-            bg.Width = 1920;
-            bg.Height = 1080;
-            MyCanvas.Children.Add(bg);
-            Canvas.SetTop(bg, 0);
-            Canvas.SetLeft(bg, 0);
+            
 
             foreach (string upgrade in upgrades)
             {
@@ -137,6 +130,7 @@ namespace NEA
             MapImage.Stretch = Stretch.Fill;
             MapImage.Width = 1920;
             MapImage.Height = 1080;
+            MapImage.ZIndex = -1;
             //MapImage.Source = setupMap();
 
             Dispatcher.UIThread.Invoke(() =>
@@ -1290,7 +1284,15 @@ namespace NEA
                 gameTimer.Start();
 
             }
-
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                GameObject.Level = new(800, 600, GameObject.Level.Seed + 10
+                +);
+                 map = setupMap();
+                MapImage.Source =map;
+            });
+            MyCanvas.Children.Remove(MapImage);
+            MyCanvas.Children.Add(MapImage);
 
 
 

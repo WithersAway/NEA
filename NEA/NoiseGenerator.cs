@@ -10,6 +10,7 @@ public class NoiseGenerator
     
     public int Width {get;}
     public int Height {get;}
+    public int Seed {get;}
     public TileType[,] map {get; private set;}
 
 
@@ -30,7 +31,7 @@ public class NoiseGenerator
         {
             seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but random seeds are 32 bit so hash the GUID for a small enough number
         }
-        
+        Seed = seed;
         map = new TileType[Width, Height];
         Generate();
     }
