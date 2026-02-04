@@ -90,7 +90,7 @@ namespace NEA
             InitializeComponent();
             
 
-            foreach (string upgrade in upgrades)
+            foreach (string upgrade in upgrades) //fill upgradeeffects dict with available buffs
             {
                 UpgradeEffects.Add(upgrade, new Buff(upgrade));
             }
@@ -122,18 +122,16 @@ namespace NEA
             };
             
             GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600);
-            /*<Image Name="MapImage"
-            Stretch="Uniform"
-            Width="800"
-            Height="600"/>*/
             
+            //sets up MapImage (background)
             MapImage.Stretch = Stretch.Fill;
             MapImage.Width = 1920;
             MapImage.Height = 1080;
-            MapImage.ZIndex = -1;
-            //MapImage.Source = setupMap();
+            MapImage.ZIndex = -1; //forces the background to always render first
+            
 
-            Dispatcher.UIThread.Invoke(() =>
+            Dispatcher.UIThread.Invoke(() => //used to force the map function to be run and assigned to MapImage in the UI Thread, as otherwise there are thread ownership issues 
+            //since MapImage is a child of the canvas, it belongs to the UI thread, while map doesnt
             {
                  map = setupMap();
                 MapImage.Source =map;
@@ -143,10 +141,8 @@ namespace NEA
             MyCanvas.Children.Add(MapImage);
             Canvas.SetLeft(MapImage, 0);
             Canvas.SetTop(MapImage, 0);
-            if (GameObject.player.GetRelic() != null)
-            {
-                ApplyRelic(GameObject.player.GetRelic());
-            }
+
+            
             GameObject.player.PlayerStats.Hp = 3;
             
             playerAmmo = new()
@@ -158,6 +154,7 @@ namespace NEA
                 Content = $"Ammo: {GameObject.player.GetAmmo()}",
                 Background = Brushes.Aqua
             };
+
             PlayerHealth = new(){
                 Name = "PlayerHealth",
                 Height = 30,
@@ -167,11 +164,13 @@ namespace NEA
                 Background = Brushes.Aqua
             };
             MyCanvas.Children.Add(playerAmmo);
-            int ii = 1;
+            
             SpawnEnemies();
+
             MyCanvas.Children.Add(PlayerHealth);
             Canvas.SetTop(PlayerHealth, 0);
             Canvas.SetLeft(PlayerHealth, 50);
+
             MyCanvas.Children.Add(GameObject.player.PlayerRectangle);
             Canvas.SetTop(GameObject.player.PlayerRectangle, 100);
             Canvas.SetLeft(GameObject.player.PlayerRectangle, 100);
@@ -185,7 +184,7 @@ namespace NEA
             // Set up game loop timer
             gameTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16.67)// ~60 FPS, actually just under since 1/60 is 0.01666... sec or 16.666... ms
+                Interval = TimeSpan.FromMilliseconds(16.67)// ~60 FPS, actually just over since 1/60 is 0.01666... sec or 16.666... ms
             };
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
@@ -209,7 +208,8 @@ namespace NEA
         }   
         private WriteableBitmap setupMap(){
             int w, h;
-            w = GameObject.Level.map.GetLength(0);
+            //adding a way to display the noise generated as part of the background
+            w = GameObject.Level.map.GetLength(0); //map is a 2d array so these statements return the dimensions (i.e. width and height)
             h = GameObject.Level.map.GetLength(1);
             WriteableBitmap wb = new WriteableBitmap(
                 new PixelSize(w,h),
@@ -221,6 +221,7 @@ namespace NEA
             using (var fb = wb.Lock()) 
             {
                 unsafe //using pointers to access and change individual pixels in the writable bitmap as rectangles had performance issues
+                //this allows me to use one array instead of using 2073600 rectangles
                 {
                     byte* p = (byte*) fb.Address.ToPointer();
                     for (int i = 0; i < h-1; i++)
@@ -228,20 +229,15 @@ namespace NEA
                         for (int j = 0; j < w; j++)
                         {
                             int currIndex = i * fb.RowBytes + 4*j;
-                            if (currIndex < 0 || currIndex + 3 >= fb.RowBytes * h)
-                            {
-                                throw new IndexOutOfRangeException(
-                                    $"Pixel write out of bounds: index={currIndex}, buffer={fb.RowBytes * h}");
-                            }
                             bool isWall = GameObject.Level.map[j,i] == TileType.Wall;
                             byte colour;
                             if (isWall)
                             {
-                                colour = (byte)0;
+                                colour = (byte)0; //if wall, tile is black
                             }
                             else
                             {
-                                colour =  (byte)255;
+                                colour =  (byte)255; //if floor, tile is white
                             }
                             p[currIndex] = colour; //RED value
                             p[currIndex + 1] = colour; //GREEN value
@@ -262,7 +258,6 @@ namespace NEA
             else
             {
                 gameOver = true;
-                
             }
             
             
@@ -331,10 +326,7 @@ namespace NEA
                 EnemyMovement(player.PlayerRectangle, enemy);
             }
             
-            if (Canvas.GetTop(player.PlayerRectangle) > 1080)
-            {
-                Canvas.SetTop(player.PlayerRectangle, 0);
-            }
+            
             int x = (int)Canvas.GetLeft(player.PlayerRectangle);
             int y = (int)Canvas.GetTop(player.PlayerRectangle);
 
@@ -425,6 +417,7 @@ namespace NEA
             {
                 PauseMenu();
             }
+
             if (keysPressed.Contains(Key.F) && !EnemiesUnstuckThisRound)
             {
                 EnemiesUnstuckThisRound = true;
@@ -435,20 +428,17 @@ namespace NEA
                     Canvas.SetTop(enemy.enemy, 1080/2 + r.Next(1,50));
                 }
             }
+            //player movement
+            int collY, collx;
+            collY = -1;
+            collx = collY;
+            if (keysPressed.Contains(Key.W)) { TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
+            if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; 
+                TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }
+            if (keysPressed.Contains(Key.A)) { TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
+            if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; 
+                TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }
 
-                int collY, collx;
-                collY = -1;
-                collx = collY;
-                if (keysPressed.Contains(Key.W)) { TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
-
-                if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; 
-                    TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }
-
-                if (keysPressed.Contains(Key.A)) { TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
-
-                if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; 
-                    TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }
-            
             if (collY != -1)
             {
                 y = collY - (int)player.PlayerRectangle.Height;
@@ -457,8 +447,10 @@ namespace NEA
             {
                 x = collx - (int)player.PlayerRectangle.Width;
             }
+            //forces player to stay on screen
             x = (int)Math.Clamp(x, 0, 1920-player.PlayerRectangle.Width);
             y = (int)Math.Clamp(y, 0, 1080-player.PlayerRectangle.Height);
+
             Canvas.SetTop(player.PlayerRectangle, y);
             Canvas.SetLeft(player.PlayerRectangle, x);
 
@@ -467,10 +459,9 @@ namespace NEA
                 MoveProjectiles(projectile);
             }
         }
-        private Point ScreenToMap(int screenX, int screenY,
-                  int renderWidth, int renderHeight,
-                  Bitmap map)
+        private Point ScreenToMap(int screenX, int screenY, int renderWidth, int renderHeight, Bitmap map)
         {
+            // converts a point from the screen into coordinates for use with map as the map image is upscaled from 800x600 to 1920x1080
             double scaleX = map.PixelSize.Width  / (double)renderWidth;
             double scaleY = map.PixelSize.Height / (double)renderHeight;
 
@@ -479,9 +470,7 @@ namespace NEA
 
             return new Point(mx, my);
         }
-        bool IsBlockedScreen(WriteableBitmap map,
-                     int screenX, int screenY,
-                     int renderWidth, int renderHeight)
+        bool IsBlockedScreen(WriteableBitmap map, int screenX, int screenY, int renderWidth, int renderHeight)
         {
             Point p = ScreenToMap(screenX, screenY, renderWidth, renderHeight, map);
             return IsBlocked(map, (int)p.X, (int)p.Y);
@@ -1269,7 +1258,8 @@ namespace NEA
             keysPressed.Clear();
             EnemiesUnstuckThisRound = false;
             Task task1 = PickUpgrade();
-            GameObject.floor += 1;
+            GameObject.floor += 1; //floor is updated here as the shop function (GoShop) uses the floor to determine what items are available
+            //this is why floor is increased here and then subtracted from in the if and else if statements
             if (!callShop && GameObject.floor - 1 != 1)
             {
                 await task1;
@@ -1284,12 +1274,12 @@ namespace NEA
                 gameTimer.Start();
 
             }
-            Dispatcher.UIThread.Invoke(() =>
+            Dispatcher.UIThread.Invoke(() =>//used to force the map function to be run and assigned to MapImage in the UI Thread, as otherwise there are thread ownership issues 
+            //since MapImage is a child of the canvas, it belongs to the UI thread, while map doesnt
             {
-                GameObject.Level = new(800, 600, GameObject.Level.Seed + 10
-                +);
-                 map = setupMap();
-                MapImage.Source =map;
+                GameObject.Level = new(800, 600, GameObject.Level.Seed + 10);
+                map = setupMap();
+                MapImage.Source = map;
             });
             MyCanvas.Children.Remove(MapImage);
             MyCanvas.Children.Add(MapImage);
@@ -1331,7 +1321,7 @@ namespace NEA
                 SpawnBoss();
                 TextBlock bossMessage = new()
                 {
-                    Text = $"Boss stage",
+                    Text = "Boss stage",
                     FontSize = 48,
                     Foreground = Brushes.White,
                     Background = Brushes.Black,
@@ -1504,16 +1494,9 @@ namespace NEA
             if (IsTouching(player, enemy.enemy))
             {
                 Canvas.SetLeft(enemy.enemy, currentEnemyX);
-            }
-            
-            
-            if (IsTouching(player, enemy.enemy))
-            {
                 Canvas.SetTop(enemy.enemy, currentEnemyY);
             }
-            // make enemies look at player
-            //double AngleToRotate = Math.Atan2(yDist, xDist) * (180 / Math.PI);
-            //enemy.enemy.RenderTransform = new RotateTransform(AngleToRotate);
+
 
             MyCanvas.Children.Remove(enemy.enemy);
             MyCanvas.Children.Add(enemy.enemy);
@@ -1524,7 +1507,6 @@ namespace NEA
             // Out of bounds = blocked
             if (x < 0 || y < 0 || x >= map.PixelSize.Width || y >= map.PixelSize.Height)
                 return true;
-
             using var fb = map.Lock();
             unsafe
             {
@@ -1537,7 +1519,7 @@ namespace NEA
                 byte g = ptr[index + 1];
                 byte r = ptr[index + 2];
 
-                // #000000
+                // #000000ff - checks to see if movement is attempted into a black pixel
                 return r == 0 && g == 0 && b == 0;
             }
         }
@@ -1551,22 +1533,7 @@ namespace NEA
                 x = nx;
                 y = ny;
             }
-        }
-
-        private static bool CheckCollisionOfTwoRects(Rectangle rect1, Rectangle rect2) //unused
-        {
-            // Get positions
-            double x1 = Canvas.GetLeft(rect1);
-            double y1 = Canvas.GetTop(rect1);
-            double x2 = Canvas.GetLeft(rect2);
-            double y2 = Canvas.GetTop(rect2);
-
-            // Add small buffer (3 pixels) to make collisions cleaner
-            const double buffer = 3.0;
-
-            // Check for intersection with buffer
-            return !(x1 + rect1.Width + buffer < x2 || x2 + rect2.Width + buffer < x1 || y1 + rect1.Height + buffer < y2 || y2 + rect2.Height + buffer < y1);
-        }       
+        }     
         private bool IsTouching(Rectangle a, Rectangle b){
             bool c = false;
             double x1 = Canvas.GetLeft(a);
@@ -1641,9 +1608,9 @@ namespace NEA
             projX = (int)Canvas.GetLeft(projectile);
             projY = (int)Canvas.GetTop(projectile);
             double speed = projectilespeedbase * projectilespeed;
+            //stops projectiles moving into walls
             TryMove(ref projX, ref projY, (int)Math.Floor(direction.X * speed), (int)Math.Floor(direction.Y * speed), map);
-            
-            
+
             Canvas.SetLeft(projectile, projX);
             Canvas.SetTop(projectile, projY);
         }

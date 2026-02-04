@@ -22,7 +22,7 @@ public class Boss : Enemy
     // Initialize boss hits as 5 * stage
     public void InitializeForStage(int stage)
     {
-        HitsRemaining = Math.Max(1, 5 * stage);
+        HitsRemaining = 5 * stage;
         if(Gimmick == BossGimmick.Tank){
             HitsRemaining *= 2;
         }

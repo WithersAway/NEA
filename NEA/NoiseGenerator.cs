@@ -42,7 +42,7 @@ public class NoiseGenerator
         //Should have: generate noise, smooth map, ensure connectivity
         GenerateNoise();
         SmoothMap(1);
-        //EnsureConnectivity();
+        //EnsureConnectivity(); currently out of use as flood fill doesnt have a base case
     }
 
     //generate using perlin noise
@@ -51,16 +51,13 @@ public class NoiseGenerator
     {
         const double scale = 0.06f;
         const int blocksize = 8;
-        //double min = double.MaxValue;
-        //double max = double.MinValue;
+        
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
             {
                 double perlin = Perlin(i/blocksize * scale, j/blocksize * scale);
-                //min = Math.Min(min, perlin);
-                //max = Math.Max(max, perlin);
-                //Debug.WriteLine("Min: " + min + ", Max: " + max);
+                
                 if (((perlin+1)/2) > 0.35)
                 {
                     map[i,j] = TileType.Floor;
@@ -166,7 +163,7 @@ public class NoiseGenerator
 
     private double Perlin(double x, double y) //takes in point (x, y)
     {
-        //ix -> intx, fx -> doublex
+        //ix -> integer part of x, fx -> fractional part of x
         //abcd are corners
         //u and v are weights
         int ix = (int)Math.Floor(x);
@@ -218,16 +215,12 @@ public class NoiseGenerator
         //using xor and large primes for a simple pseudorandom hashs seed
         hash &= 7; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
-        //double[][] gradMap =
-        //{
-        //    new[]{1d,1d}, new[]{-1d,1d}, new[]{1d,-1d}, new[]{-1d,-1d},
-        //    new[]{1d,0d}, new[]{-1d,0d}, new[]{0d, 1d}, new[]{ 0d,-1d}
-        //}; //make a vector map of 8 unique directional gradients (cardinal directions + diags)
-        double inv = 1.0 / Math.Sqrt(2);
+        
+        double norm = 1.0 / Math.Sqrt(2); //short for normaliser
         double[][] gradMap =
         {
-            new[]{ inv,  inv}, new[]{-inv,  inv},
-            new[]{ inv, -inv}, new[]{-inv, -inv},
+            new[]{ norm,  norm}, new[]{-norm,  norm},
+            new[]{ norm, -norm}, new[]{-norm, -norm},
             new[]{ 1d, 0d}, new[]{-1d, 0d},
             new[]{ 0d, 1d}, new[]{ 0d,-1d}
         };

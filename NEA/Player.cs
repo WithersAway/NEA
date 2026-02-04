@@ -15,7 +15,6 @@ public class Player(List<string> InitArgs, Rectangle rectIN, string? relictoset 
     internal List<Item> Items { get; set; } = [];
     internal Weapon playerWeapon = new("Basic Gun", 1, 0, false, false, 7, false, 1);
     public Stats PlayerStats { get; set; } = new Stats(Convert.ToInt32(InitArgs[1]), Convert.ToInt32(InitArgs[2]), Convert.ToInt32(InitArgs[3]), Convert.ToInt32(InitArgs[4]), Convert.ToInt32(InitArgs[5]), Convert.ToInt32(InitArgs[6]), Convert.ToInt32(InitArgs[7]), Convert.ToInt32(InitArgs[8]));
-    internal Specialise PlayerClass { get; } = (Specialise)Convert.ToInt32(InitArgs[9]); //specialise is for class
     protected static int invMax = 5;
     private int Ammo = 10;
     

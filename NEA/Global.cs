@@ -12,7 +12,6 @@ public class Game
     public Player player;
     public Difficulty mode { get; set; }
     public NoiseGenerator Level;
-    List<Enemy> enemies = [];
     public Game(List<string> args, Rectangle rect, int difficulty, int wNG, int hNG, int? seed = null)
     {
         floor = 1;
