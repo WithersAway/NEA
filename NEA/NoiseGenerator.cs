@@ -29,11 +29,12 @@ public class NoiseGenerator
         }
         else
         {
-            seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but random seeds are 32 bit so hash the GUID for a small enough number
+            seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but System.Random seeds are 32 bit so hash the GUID for a small enough number
         }
         Seed = seed;
         map = new TileType[Width, Height];
         Generate();
+        
     }
 
    
@@ -41,7 +42,7 @@ public class NoiseGenerator
     public void Generate(){
         //Should have: generate noise, smooth map, ensure connectivity
         GenerateNoise();
-        SmoothMap(1);
+        SmoothMap(4);
         //EnsureConnectivity(); currently out of use as flood fill doesnt have a base case
     }
 

@@ -30,7 +30,7 @@ namespace NEA
             "Fire Rate Up 10%", "Fire Rate Up 20%", "Fire Rate Up 30%", "Speed 10%"];
         private Dictionary<string, Buff> UpgradeEffects = [];
         private TextBox InputPath;
-        public DateTime lastPlayerCollisionTime = DateTime.Now;
+        public DateTime lastPlayerCollisionTime = DateTime.MinValue;
         double moveModifier = 1d;
         double projectilespeed = 1d;
         const double moveConstant = 5d;
@@ -133,10 +133,10 @@ namespace NEA
             Dispatcher.UIThread.Invoke(() => //used to force the map function to be run and assigned to MapImage in the UI Thread, as otherwise there are thread ownership issues 
             //since MapImage is a child of the canvas, it belongs to the UI thread, while map doesnt
             {
-                 map = setupMap();
+                map = setupMap();
                 MapImage.Source =map;
             });
-            //Debug.WriteLine(MapImage.Source.Size);
+            
 
             MyCanvas.Children.Add(MapImage);
             Canvas.SetLeft(MapImage, 0);
@@ -1402,7 +1402,7 @@ namespace NEA
         }
         private void SpawnBoss(){
             // Clear any remaining projectiles
-            foreach (var projectile in playerProjectiles.ToList())
+            foreach (Rectangle projectile in playerProjectiles)
             {
                 MyCanvas.Children.Remove(projectile);
             }
@@ -1424,17 +1424,7 @@ namespace NEA
             Canvas.SetLeft(newBoss.enemy, centerX);
             Canvas.SetTop(newBoss.enemy, centerY);
         }
-        private Rect RectConverter(Rectangle rectangle) // currently unused after transition to Avalonia as the avalonia Rectangle class works slightly differently to WPF
-        // takes a rectangle and outputs the position and size as a Rect to be used in IsTouching in
-        // IntersectsWith method to allow to check collisions of player w/ enemy
-        {
-            double x = Canvas.GetLeft(rectangle);
-            double y = Canvas.GetTop(rectangle);
-            double width = rectangle.Width;
-            double height = rectangle.Height;
-            
-            return new Rect(x, y, width, height);
-        }
+        
         
         private void EnemyMovement(Rectangle player, Enemy enemy)
         {
@@ -1479,7 +1469,7 @@ namespace NEA
                     nextY = currentEnemyY - 2 * yToMove;
                 }
             }
-            if (!IsBlockedScreen(map, (int)nextX + 3, (int)nextY + 3, 1920, 1080))
+            if (!IsBlockedScreen(map, (int)nextX + 3 /*3 pixel buffer*/, (int)nextY + 3, 1920, 1080) && !IsBlockedScreen(map, (int)(nextX + 3 + enemy.enemy.Width), (int)(nextY + 3 + enemy.enemy.Height), 1920, 1080))
             {
                 Canvas.SetLeft(enemy.enemy, nextX);
                 Canvas.SetTop(enemy.enemy, nextY);
@@ -1519,7 +1509,7 @@ namespace NEA
                 byte g = ptr[index + 1];
                 byte r = ptr[index + 2];
 
-                // #000000ff - checks to see if movement is attempted into a black pixel
+                // #000000 - checks to see if movement is attempted into a black pixel
                 return r == 0 && g == 0 && b == 0;
             }
         }
