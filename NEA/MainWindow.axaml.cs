@@ -1020,7 +1020,7 @@ namespace NEA
                 switch (weaponModifier)
                 {
                     case "Strong":
-                        GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 1.2));
+                        GameObject.player.setPlayerDamageBase((int)Math.Round(GameObject.player.getPlayerDamageBase() * 1.2));
                         break;
                     case "Warped":
                         GameObject.player.setPlayerDamageBase((int)Math.Floor(GameObject.player.getPlayerDamageBase() * 0.9));
@@ -1413,16 +1413,24 @@ namespace NEA
                 Height = 45, 
                 Width = 45 
             }, bossstats, 1);
-            // Initialize boss hits based on current stage
+            // Initialize boss hp based on current stage
             newBoss.InitializeForStage(currentStage);
             enemies.Add(newBoss);
 
             // Add boss to canvas and position it in centre
             MyCanvas.Children.Add(newBoss.enemy);
-            double centerX = MyCanvas.Bounds.Width / 2 - newBoss.enemy.Width / 2;
-            double centerY = MyCanvas.Bounds.Height / 2 - newBoss.enemy.Height / 2;
-            Canvas.SetLeft(newBoss.enemy, centerX);
-            Canvas.SetTop(newBoss.enemy, centerY);
+            int x, y;
+            Random r = new();
+            do
+                {
+                    
+                    x = r.Next(15,1920);
+                    y = r.Next(15,1080);
+                    
+
+                }while (IsBlockedScreen(map, x,y,1920 + 25,1080 + 25));
+            Canvas.SetLeft(newBoss.enemy, x);
+            Canvas.SetTop(newBoss.enemy, y);
         }
         
         

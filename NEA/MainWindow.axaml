@@ -7,7 +7,7 @@
         Title="NEA"
         Width="1920" Height="1080">
     <Canvas Name="MyCanvas" Background="White">
-        <Label Name="distance"  Content="Label" Canvas.Left="724" Canvas.Top="32"/>
+       
         
     </Canvas>
     
