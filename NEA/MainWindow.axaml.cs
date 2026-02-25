@@ -214,8 +214,8 @@ namespace NEA
             WriteableBitmap wb = new WriteableBitmap(
                 new PixelSize(w,h),
                 new Vector(96,96),
-                PixelFormat.Rgba8888
-                //AlphaFormat.Opaque
+                PixelFormat.Rgba8888,
+                AlphaFormat.Opaque
             );
             //writing
             using (var fb = wb.Lock()) 
@@ -461,7 +461,7 @@ namespace NEA
         }
         private Point ScreenToMap(int screenX, int screenY, int renderWidth, int renderHeight, Bitmap map)
         {
-            // converts a point from the screen into coordinates for use with map as the map image is upscaled from 800x600 to 1920x1080
+            
             double scaleX = map.PixelSize.Width  / (double)renderWidth;
             double scaleY = map.PixelSize.Height / (double)renderHeight;
 
@@ -786,7 +786,7 @@ namespace NEA
                     };
                     return;
                 }
-                catch (System.ArgumentNullException)
+                catch (ArgumentNullException)
                 {
 
                     return;

@@ -43,7 +43,7 @@ public class NoiseGenerator
         //Should have: generate noise, smooth map, ensure connectivity
         GenerateNoise();
         SmoothMap(4);
-        //EnsureConnectivity(); currently out of use as flood fill doesnt have a base case
+        //EnsureConnectivity(); currently out of use as flood fill doesnt work properly and stack overflows
     }
 
     //generate using perlin noise
@@ -57,9 +57,12 @@ public class NoiseGenerator
         {
             for (int j = 0; j < Height; j++)
             {
-                double perlin = Perlin(i/blocksize * scale, j/blocksize * scale);
+                double perlin = Perlin(i/blocksize * scale, j/blocksize * scale); 
+                //splitting into 8x8 pixel chunks allows for larger blocks of terrain,
+                //making a nicer environment for the player to move about in. 
+                //this also helps with randomness
                 
-                if (((perlin+1)/2) > 0.35)
+                if (((perlin+1)/2) > 0.35)//standardisation
                 {
                     map[i,j] = TileType.Floor;
                 }
@@ -124,7 +127,7 @@ public class NoiseGenerator
         bool[,] visited = new bool[Width, Height];
         FloodFill(sx, sy, visited);
 
-        // Convert unreachable floors into walls to avoid enemies spawning in pockets inaccessible to the player, causign a softlock
+        
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
@@ -213,11 +216,11 @@ public class NoiseGenerator
     {
         //use large primes together with bitwise xor for a pseudorandom seed hash
         int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //bitwise xor gives different seeds every time, but the same world for the same seed every time
-        //using xor and large primes for a simple pseudorandom hashs seed
+        //using xor and large primes for a simple pseudorandom hash seed
         hash &= 0b111; //the bitwise and limits number 0-7 for one of 8 gradients for gradMap
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
         
-        double norm = 1.0 / Math.Sqrt(2); //short for normaliser
+        double norm = 1.0 / Math.Sqrt(2); //short for normaliser as otherwise diagonals are weighted differently in the Perlin subroutine
         double[][] gradMap =
         {
             new[]{ norm,  norm}, new[]{-norm,  norm},
