@@ -205,15 +205,16 @@ public class NoiseGenerator
     //smoothes curve to fit a fifth degree polynomial,
     //taken directly from Ken Perlin (creator of Perlin noise)
     //expands to: 6t^5 − 15t^4 + 10t^3
-    //values less than one don't grow to insane sizes with exponentiation, so this curve is a good fit. 
-    //for values above one, consider using returning the value with Math.Pow(returnval, 1/5)
-    //to reduce the value back near the original
+    //values less than one don't grow to insane sizes with exponentiation, so this curve is a good fit
 
 
     //dot product for noise values
 
     private double DotProductNoise (int ix, int iy, double x, double y)
     {
+        
+        //for direction of noise travel
+
         //use large primes together with bitwise xor for a pseudorandom seed hash
         int hash = (ix * 73856093) ^ (iy * 19349663) ^ seed; //bitwise xor gives different seeds every time, but the same world for the same seed every time
         //using xor and large primes for a simple pseudorandom hash seed
@@ -221,6 +222,7 @@ public class NoiseGenerator
         //using 8 gradients rather than Perlin's usual 12 as this simplifies maths and eliminates the need for matrix transforms
         
         double norm = 1.0 / Math.Sqrt(2); //short for normaliser as otherwise diagonals are weighted differently in the Perlin subroutine
+        //allows for smoother terrain generation due to using blocks
         double[][] gradMap =
         {
             new[]{ norm,  norm}, new[]{-norm,  norm},

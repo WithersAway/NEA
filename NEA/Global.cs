@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace NEA;
 
 public static class Global{
-    [DllImport("libc")] internal static extern int getuid();}
+   }
 public class Game
 {
     public int floor;

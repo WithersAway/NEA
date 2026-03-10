@@ -432,13 +432,17 @@ namespace NEA
             int collY, collx;
             collY = -1;
             collx = collY;
-            if (keysPressed.Contains(Key.W)) { TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
+            //check player collision against generated terrain, TryMove accesses the memory locations to check if the player is moving 
+            //into a black pixel and stops the movement if the player would collide with terrain
+            if (keysPressed.Contains(Key.W)) { 
+                TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
             if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; 
                 TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }
-            if (keysPressed.Contains(Key.A)) { TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
+            if (keysPressed.Contains(Key.A)) { 
+                TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
             if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; 
                 TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }
-
+            //indented for readability and for my own ease of debugging
             if (collY != -1)
             {
                 y = collY - (int)player.PlayerRectangle.Height;
@@ -771,6 +775,7 @@ namespace NEA
                         {
                             return;
                         }
+                        #pragma warning disable CS8604
                         GameObject.floor = int.Parse(sr.ReadLine()) - 1;
                         GameObject.player.PlayerStats.Hp = int.Parse(sr.ReadLine());
                         GameObject.player.playerWeapon = new Weapon(sr.ReadLine(), 1, 1, false, false, 1, false, 1);
@@ -783,6 +788,7 @@ namespace NEA
                             OnUpgradePicked(sr.ReadLine());
                         }
                         StartNextStage();
+                        #pragma warning restore CS8604
                     };
                     return;
                 }
@@ -1005,7 +1011,7 @@ namespace NEA
                 default:
                     break;
             }
-            string weaponModifier = null;
+            string weaponModifier = "";
             string weaponType;
             if (item is Weapon)
             {
