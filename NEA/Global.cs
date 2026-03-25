@@ -12,10 +12,10 @@ public class Game
     public Player player;
     public Difficulty mode { get; set; }
     public NoiseGenerator Level;
-    public Game(List<string> args, Rectangle rect, int difficulty, int wNG, int hNG, int? seed = null)
+    public Game(List<string> args, Rectangle rect, int difficulty, int wNG, int hNG, double scale, int? seed = null)
     {
         floor = 1;
-        Level = new(wNG, hNG, seed);
+        Level = new(wNG, hNG, scale, seed);
         player = new Player(args, rect);
         mode = (Difficulty)difficulty;
         

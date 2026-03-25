@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for development on Linux
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
@@ -85,7 +86,7 @@ namespace NEA
                 20,
             ];
             #endregion
-        public MainWindow(double scale = 0.06f)
+        public MainWindow(double scale, int? seed)
         {
             InitializeComponent();
             
@@ -121,7 +122,16 @@ namespace NEA
                 Width = 40
             };
             
-            GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600);
+            
+            if (seed.HasValue)
+            {
+                GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600, scale, seed.Value);
+            }
+            else
+            {
+                GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600, scale);
+            }
+            
             
             //sets up MapImage (background)
             MapImage.Stretch = Stretch.Fill;
@@ -230,9 +240,9 @@ namespace NEA
                         for (int j = 0; j < w; j++)
                         {
                             int currIndex = i * fb.RowBytes + 4*j;
-                            bool isWall = GameObject.Level.map[j,i] == TileType.Wall;
+                            bool isWall = (GameObject.Level.map[j,i] == TileType.Wall);
                             byte colour;
-                            if (isWall)
+                            /*if (isWall)
                             {
                                 colour = (byte)0; //if wall, tile is black
                             }
@@ -244,11 +254,28 @@ namespace NEA
                             p[currIndex + 1] = colour; //GREEN value
                             p[currIndex + 2] = colour; //BLUE value
                             p[currIndex + 3] = (byte)(255-colour); //ALPHA value
+                        }*/
+                        if (isWall)
+                        {
+                            p[currIndex] = 0; //RED value
+                            p[currIndex + 1] = 0; //GREEN value
+                            p[currIndex + 2] = 0; //BLUE value
+                            p[currIndex + 3] = (byte)(255); //ALPHA value
+                        }
+                        else
+                        {
+                            //if floor, tile is beige
+                            p[currIndex] = 245; //RED value
+                            p[currIndex + 1] = 222; //GREEN value
+                            p[currIndex + 2] = 179; //BLUE value
+                            p[currIndex + 3] = (byte)(255); //ALPHA value
+                            //F5DEB3 = 245 222 179
                         }
                     }
                 }
             }
             return wb;
+        }
         }
         private async void DealDamageToPlayer()
         {

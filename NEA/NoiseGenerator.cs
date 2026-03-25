@@ -19,7 +19,7 @@ public class NoiseGenerator
     private readonly int seed;
 
     //a simplified version of perlin's noise algorithm, using fewer gradient values, a seed workaround and simplified versions of the smoothing and connectivity functions
-    public NoiseGenerator(int width, int height, int? customseed = null, double scale = 0.06f)
+    public NoiseGenerator(int width, int height, double scale, int? customseed = null)
     {
         Width = width;
         Height = height;
@@ -35,7 +35,9 @@ public class NoiseGenerator
         Seed = seed;
         Scale = scale;
         map = new TileType[Width, Height];
+        
         Generate();
+        Debug.WriteLine("Noise Generated!");
         
     }
 
