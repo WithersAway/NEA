@@ -463,15 +463,22 @@ namespace NEA
             collx = collY;
             //check player collision against generated terrain, TryMove accesses the memory locations to check if the player is moving 
             //into a black pixel and stops the movement if the player would collide with terrain
-            if (keysPressed.Contains(Key.W)) { 
-                TryMove(ref x, ref y, 0, -1 * (int)Math.Floor(moveConstant), map); }
-            if (keysPressed.Contains(Key.S)) { collY = y + (int)player.PlayerRectangle.Height; 
-                TryMove(ref x, ref collY, 0, +1 * (int)Math.Floor(moveConstant), map); }
-            if (keysPressed.Contains(Key.A)) { 
-                TryMove(ref x, ref y, -1 * (int)Math.Floor(moveConstant), 0, map); }
-            if (keysPressed.Contains(Key.D)) { collx = x + (int)player.PlayerRectangle.Width; 
-                TryMove(ref collx, ref y, +1 * (int)Math.Floor(moveConstant), 0, map);  }
-            //indented for readability and for my own ease of debugging
+            int dx = 0;
+            int dy = 0;
+
+            if (keysPressed.Contains(Key.W)) {
+                TryMove(ref x, ref y, 0, -(int)Math.Floor(moveConstant), map);
+            }
+            if (keysPressed.Contains(Key.S)) {
+                TryMove(ref x, ref y, 0, +(int)Math.Floor(moveConstant), map);
+            }
+            if (keysPressed.Contains(Key.A)) {
+                TryMove(ref x, ref y, -(int)Math.Floor(moveConstant), 0, map);
+            }
+            if (keysPressed.Contains(Key.D)) {
+                TryMove(ref x, ref y, +(int)Math.Floor(moveConstant), 0, map);
+            }
+
             if (collY != -1)
             {
                 y = collY - (int)player.PlayerRectangle.Height;
@@ -1560,7 +1567,7 @@ namespace NEA
                 return r == 0 && g == 0 && b == 0;
             }
         }
-        private void TryMove(ref int x, ref int y, int dx, int dy, WriteableBitmap map)
+        private void TryMove(ref int x, ref int y, int dx, int dy, WriteableBitmap map, Rectangle mover)
         {
             int nx = x + dx;
             int ny = y + dy;

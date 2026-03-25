@@ -19,8 +19,6 @@ using Tmds.DBus.Protocol;
 using System.Dynamic;
 
 
-//TO DO:
-//find bg
 
 namespace NEA{
 public partial class MainMenu : Window
@@ -32,20 +30,21 @@ public partial class MainMenu : Window
     Slider ScaleSlider = new Slider();
     Label SliderVal = new Label();
     private double _sliderValue;
-    public double SliderValue
-{
-    get => _sliderValue;
-    set
-    {
-        _sliderValue = value;
+    public double SliderValue{
+        get => _sliderValue;
+        set
+        {
+            _sliderValue = value;
+        }
     }
-}
     TextBox seedIn = new TextBox();
     Button SeedSet = new Button();
     int seedParam = 0;
     Bitmap settingbg = new Bitmap("settingsBackground.png");
     Image menubg = new Image();
     bool SliderValueChanged = false;
+    bool settingsMenuExists = false;
+    Window settingsMenu = null;
     
     public MainMenu()
     {
@@ -59,6 +58,8 @@ public partial class MainMenu : Window
         IntroText.VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center;
         IntroText.Width = 150;
         IntroText.Background = Brushes.Wheat;
+
+        seedIn.Watermark = "Enter seed...";
 
         StartButton.Content = "   Enter \n\tThe \n Dungeon";
         StartButton.Background = Brushes.Wheat;
@@ -114,7 +115,8 @@ public partial class MainMenu : Window
         }
         catch (System.FormatException)
         {
-            seedIn.Text = "Not a valid seed - seeds must be 0-65 535, consisting of only numbers";
+            seedIn.Watermark = "Not a valid seed - seeds must be 0-65 535, consisting of only numbers";
+            seedIn.Text = "";
             
         }
 
@@ -140,9 +142,18 @@ public partial class MainMenu : Window
             ScaleSlider.Maximum = 0.25f;
             ScaleSlider.Minimum = 0f;
             ScaleSlider.Width = 100;
+            Button closeMenu = new Button
+            {
+                Content = "Close Menu",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(20),
 
+            };
+            closeMenu.Click += Exit_Menu;
             
-            var settingsMenu = new Window()
+            if (!settingsMenuExists)
+            {
+            settingsMenu = new Window()
                 {
                     
                     Title = "Settings",
@@ -176,16 +187,29 @@ public partial class MainMenu : Window
                                 Margin = new Thickness(20)
                             },
                             seedIn,
-                            SeedSet
+                            SeedSet,
+                            closeMenu
+                            
                         }
                     }
                 };
+                settingsMenuExists = true;
                 await settingsMenu.ShowDialog(this);
+                }
+                else
+                {
+                    settingsMenu.Show();
+                }
+                
     }
 
     private void Exit_Click(object? sender, RoutedEventArgs e)
     {
         Close();
+    }
+    private void Exit_Menu(object? sender, RoutedEventArgs e)
+    {
+        (((Button)sender).GetVisualRoot() as Window)?.Hide();
     }
                             
 }

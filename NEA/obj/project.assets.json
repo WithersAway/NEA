@@ -1368,19 +1368,19 @@
     ]
   },
   "packageFolders": {
-    "/home/Otto/.nuget/packages/": {}
+    "/home/tto/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
+      "projectUniqueName": "/home/tto/Code/NEA/NEA/NEA.csproj",
       "projectName": "NEA",
-      "projectPath": "/home/Otto/RiderProjects/NEA/NEA/NEA.csproj",
-      "packagesPath": "/home/Otto/.nuget/packages/",
-      "outputPath": "/home/Otto/RiderProjects/NEA/NEA/obj/",
+      "projectPath": "/home/tto/Code/NEA/NEA/NEA.csproj",
+      "packagesPath": "/home/tto/.nuget/packages/",
+      "outputPath": "/home/tto/Code/NEA/NEA/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/Otto/.nuget/NuGet/NuGet.Config"
+        "/home/tto/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -1445,7 +1445,7 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[10.0.0, 10.0.0]"
+            "version": "[10.0.4, 10.0.4]"
           }
         ],
         "frameworkReferences": {
@@ -1453,7 +1453,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",
