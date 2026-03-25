@@ -12,13 +12,14 @@ public class NoiseGenerator
     public int Height {get;}
     public int Seed {get;}
     public TileType[,] map {get; private set;}
+    public double Scale{get; set;}
 
 
 
     private readonly int seed;
 
     //a simplified version of perlin's noise algorithm, using fewer gradient values, a seed workaround and simplified versions of the smoothing and connectivity functions
-    public NoiseGenerator(int width, int height, int? customseed = null)
+    public NoiseGenerator(int width, int height, int? customseed = null, double scale = 0.06f)
     {
         Width = width;
         Height = height;
@@ -32,6 +33,7 @@ public class NoiseGenerator
             seed = Guid.NewGuid().GetHashCode(); //GUIDs are 128 bit but System.Random seeds are 32 bit so hash the GUID for a small enough number
         }
         Seed = seed;
+        Scale = scale;
         map = new TileType[Width, Height];
         Generate();
         
@@ -50,7 +52,7 @@ public class NoiseGenerator
 
     private void GenerateNoise()
     {
-        const double scale = 0.06f;
+        double scale = Scale;
         const int blocksize = 8;
         
         for (int i = 0; i < Width; i++)

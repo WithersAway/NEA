@@ -8,7 +8,7 @@ using Avalonia; //avalonia is a FOSS cross-platform WPF port to allow for develo
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml.Converters;
+using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -85,7 +85,7 @@ namespace NEA
                 20,
             ];
             #endregion
-        public MainWindow()
+        public MainWindow(double scale = 0.06f)
         {
             InitializeComponent();
             
@@ -139,6 +139,7 @@ namespace NEA
             
 
             MyCanvas.Children.Add(MapImage);
+            
             Canvas.SetLeft(MapImage, 0);
             Canvas.SetTop(MapImage, 0);
 
@@ -922,10 +923,12 @@ namespace NEA
             }
             var saveMessageBox = new Window()
             {
-                Title = "Save Game Menu",
+                Title = "Upgrade Menu",
                 Width = 450,
                 Height = 300,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Background = Brushes.Beige,
+                SystemDecorations = SystemDecorations.None,
                 Content = stackPanel
 
             };
@@ -1251,8 +1254,10 @@ namespace NEA
                 Title = "Item Buy Menu",
                 Width = 500,
                 Height = 600,
+                Background = Brushes.Beige,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Content = stackPanel
+                Content = stackPanel,
+                SystemDecorations = SystemDecorations.None
 
             };
             await itemBuyBox.ShowDialog(this);
@@ -1618,5 +1623,6 @@ namespace NEA
             Canvas.SetLeft(projectile, projX);
             Canvas.SetTop(projectile, projY);
         }
+        
     }
 }
