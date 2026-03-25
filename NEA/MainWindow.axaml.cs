@@ -59,6 +59,7 @@ namespace NEA
         private double projectilespeedbase = 5d;
         private Bitmap playerSprite = new Bitmap("playerSprite.png");
         public Image MapImage = new Image();
+        double globalscale = 0;
         //public Image bg = new Image();
         
         WriteableBitmap map;
@@ -122,7 +123,7 @@ namespace NEA
                 Width = 40
             };
             
-            
+            globalscale = scale;
             if (seed.HasValue)
             {
                 GameObject = new Game(playerStatTestingList, PlayerRect, 1, 800, 600, scale, seed.Value);
@@ -1315,7 +1316,7 @@ namespace NEA
             Dispatcher.UIThread.Invoke(() =>//used to force the map function to be run and assigned to MapImage in the UI Thread, as otherwise there are thread ownership issues 
             //since MapImage is a child of the canvas, it belongs to the UI thread, while map doesnt
             {
-                GameObject.Level = new(800, 600, GameObject.Level.Seed + 10);
+                GameObject.Level = new(800, 600, globalscale, GameObject.Level.Seed + 10);
                 map = setupMap();
                 MapImage.Source = map;
             });
